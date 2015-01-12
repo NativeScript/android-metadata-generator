@@ -1,0 +1,5 @@
+bin/**
+bin/*.*
+/bin
+
+jars/nativescript.jar

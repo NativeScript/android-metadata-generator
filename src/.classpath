@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="jars/androidasync-1.2.4.jar"/>
+	<classpathentry kind="lib" path="jars/gson-2.2.4.jar"/>
+	<classpathentry kind="lib" path="jars/ion-1.2.4.jar"/>
+	<classpathentry kind="lib" path="jars/android17.jar"/>
+	<classpathentry kind="lib" path="jars/support-v4-r13.jar"/>
+	<classpathentry kind="lib" path="jars/nativescript.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
