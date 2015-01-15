@@ -4,15 +4,13 @@
 var pathModule = require("path");
 
 module.exports = function(grunt) {
-    var outDir = "./dist";
-    var srcDir = ".";
 
     var args = {
         jarsSrc: grunt.option("jarsPath") || "./jars"
     };
 
     grunt.initConfig({
-        pkg: grunt.file.readJSON(srcDir + "/package.json"),
+        pkg: grunt.file.readJSON("./package.json"),
         clean: {
             tool: {
                 src: ["./src/bin/com/"]
@@ -25,6 +23,12 @@ module.exports = function(grunt) {
             },
             jars: {
                 src: ["./src/jars"]
+            },
+            outputDir: {
+                src: "./dist"
+            },
+            resultDir: {
+                src: ["./dist/**/*.*", "./dist/**/*", "!./dist/*.tgz"]
             }
         },
         exec: {
@@ -36,6 +40,10 @@ module.exports = function(grunt) {
                 cmd: "java -cp ./jars/*:. com.telerik.bindings.Generator",
                 cwd: "./src/"
             },
+            npmPack: {
+                cmd: "npm pack",
+                cwd: "./dist"
+            }
         },
         copy: {
             jars: {
@@ -51,6 +59,10 @@ module.exports = function(grunt) {
                     "./com/**/*.*"
                 ],
                 dest: "./src/"
+            },
+            collectResultFiles: {
+                src: ["./src/bin/*.dat", "./package.json"],
+                dest: "./dist/"
             }
         }
     });
@@ -71,18 +83,20 @@ module.exports = function(grunt) {
                             "clean:jars",
                             "copy:jars",
                             "exec:runTool",
-                            "clean:runnableTool",
-                            //TODO: COPY THE OUTPUT SOMEWHERE!
+                            "clean:runnableTool"
                         ]);
 
+    grunt.registerTask("packResult", [
+                "clean:outputDir",
+                "copy:collectResultFiles",
+                "exec:npmPack",
+                "clean:resultDir",
+            ]);
 
     grunt.registerTask("default", [
                             "buildGenerator",
                             "generateMetadata",
-//                           The following two calls should not exist.
-//                              They are a hack until the binding generator starts working properly:
-//                             "clean:HACKgeneratedAndroid17Bindings",
-//                             "unzip:HACKCompilableGeneratedBindings"
+                            "packResult"
                         ]);
 
 }
