@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -28,10 +30,20 @@ public class NSClassLoader extends URLClassLoader {
 	}
 	
 	public void loadDir(String path){
-		File dir = new File(path);
+		// replace all backward slashes with forward ones (back slash is not a valid URI component)
+		path = path.replace("\\", "/");
+		URI workingDir = new File("").toURI();
 		
-		this.traverseDir(dir);
-		this.populateClassNames();
+		try {
+			URI pathUri = new URI(path);
+			
+			File dir = new File(workingDir.resolve(pathUri));
+			this.traverseDir(dir);
+			this.populateClassNames();
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private void populateClassNames(){
