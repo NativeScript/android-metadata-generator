@@ -1,4 +1,4 @@
-package com.telerik.bindings;
+package com.telerik.metadata;
 
 import java.io.File;
 import java.io.FileInputStream;

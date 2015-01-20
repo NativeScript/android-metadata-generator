@@ -1,4 +1,4 @@
-package com.telerik.bindings;
+package com.telerik.metadata;
 
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
@@ -7,10 +7,10 @@ import java.nio.IntBuffer;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 
-import com.telerik.bindings.TreeNode.FieldInfo;
-import com.telerik.bindings.TreeNode.MethodInfo;
+import com.telerik.metadata.TreeNode.FieldInfo;
+import com.telerik.metadata.TreeNode.MethodInfo;
 
-public class MetadataWriter {
+public class Writer {
 	private static byte[] writeUniqueName_lenBuff = new byte[2];
 	private static byte[] writeInt_buff = new byte[4];
 	private static byte[] writeTreeNodeId_buff = new byte[2];

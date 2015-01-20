@@ -1,4 +1,4 @@
-package com.telerik.bindings;
+package com.telerik.metadata;
 
 public class Generator {
 
@@ -12,8 +12,8 @@ public class Generator {
 			dirName = args[0];
 		}
 		
-		TreeNode root = MetadataBuilder.build(dirName);
-		MetadataWriter.writeTree(root);
+		TreeNode root = Builder.build(dirName);
+		Writer.writeTree(root);
 		
 //		String[] jars1 = { 
 //				"android17.jar", "ion-1.2.4.jar", 

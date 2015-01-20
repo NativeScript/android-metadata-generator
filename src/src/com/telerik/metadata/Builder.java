@@ -1,4 +1,4 @@
-package com.telerik.bindings;
+package com.telerik.metadata;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -8,10 +8,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 
-import com.telerik.bindings.TreeNode.FieldInfo;
-import com.telerik.bindings.TreeNode.MethodInfo;
+import com.telerik.metadata.TreeNode.FieldInfo;
+import com.telerik.metadata.TreeNode.MethodInfo;
 
-public class MetadataBuilder {
+public class Builder {
 	private static class MethodNameComparator implements Comparator<Method>
 	{
 		@Override

@@ -37,7 +37,7 @@ module.exports = function(grunt) {
                 cwd: "./src/"
             },
             runTool: {
-                cmd: "java -cp ./jars/*:. com.telerik.bindings.Generator",
+                cmd: "java -cp ./jars/*:. com.telerik.metadata.Generator",
                 cwd: "./src/"
             },
             npmPack: {
