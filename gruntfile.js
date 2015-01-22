@@ -15,29 +15,13 @@ module.exports = function(grunt) {
             tool: {
                 src: ["./src/bin/com/"]
             },
-            runnableTool: {
-                src: ["./src/com/"]
-            },
-            generatedMetadata: {
-                src: ["./src/bin/out/"]
-            },
-            jars: {
-                src: ["./src/jars"]
-            },
             outputDir: {
                 src: "./dist"
-            },
-            resultDir: {
-                src: ["./dist/**/*.*", "./dist/**/*", "!./dist/*.tgz"]
             }
         },
         exec: {
             antBuild: {
                 cmd: "ant build",
-                cwd: "./src/"
-            },
-            runTool: {
-                cmd: "java -cp ./jars/*:. com.telerik.metadata.Generator",
                 cwd: "./src/"
             },
             npmPack: {
@@ -46,23 +30,19 @@ module.exports = function(grunt) {
             }
         },
         copy: {
-            jars: {
-                expand: true,
-                force: true,
-                src: pathModule.join(args.jarsSrc, "**/*.jar"),
-                dest: "./src/jars/"
-            },
-            toolToRoot: {
+            runnableTool: {
                 expand: true,
                 cwd: "./src/bin",
                 src: [
                     "./com/**/*.*"
                 ],
-                dest: "./src/"
+                dest: "./dist/classes/"
             },
-            collectResultFiles: {
-                src: ["./src/bin/*.dat", "./package.json"],
-                dest: "./dist/"
+            packageFiles: {
+                files: [
+                    {src: "./package.json", dest: "./dist/"},
+                    {expand: true, src: "./generate-metadata.sh", cwd: "./build/", dest: "./dist/bin/"}
+                ]
             }
         }
     });
@@ -76,27 +56,16 @@ module.exports = function(grunt) {
                             "exec:antBuild"
                         ]);
 
-    grunt.registerTask("generateMetadata", [
-                            "clean:runnableTool",
-                            "copy:toolToRoot",
-                            "clean:generatedMetadata",
-                            "clean:jars",
-                            "copy:jars",
-                            "exec:runTool",
-                            "clean:runnableTool"
-                        ]);
-
-    grunt.registerTask("packResult", [
+    grunt.registerTask("packGenerator", [
                 "clean:outputDir",
-                "copy:collectResultFiles",
-                "exec:npmPack",
-                "clean:resultDir",
+                "copy:runnableTool",
+                "copy:packageFiles",
+                "exec:npmPack"
             ]);
 
     grunt.registerTask("default", [
                             "buildGenerator",
-                            "generateMetadata",
-                            "packResult"
+                            "packGenerator"
                         ]);
 
 }
