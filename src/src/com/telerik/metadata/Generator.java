@@ -6,8 +6,7 @@ public class Generator {
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-		//String dirName = "..\\..\\..\\..\\Temp\\test";
-		String dirName = "jars";
+		String dirName = "../jars";
 		if(args != null && args.length > 0){
 			dirName = args[0];
 		}

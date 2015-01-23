@@ -34,12 +34,23 @@ public class Builder {
 		ArrayList<ArrayList<String>> jarClassNames = NSClassLoader.getInstance().getClassNames();
 		for(ArrayList<String> classNames : jarClassNames){
 			for(String className : classNames){
-				try {
+				try 
+				{
+					// possible exceptions here are:
+					// - NoClassDefFoundError
+					// - ClassNotFoundException
+					// both are raised due to some API level mismatch - 
+					// e.g. we are processing jars with API 21 while we have in our class path API 17
 					Class<?> clazz = Class.forName(className, false, loader);
 					generate(clazz, root);
-				} catch (Exception e) {
-					e.printStackTrace();
-					// TODO: This should never happen
+				} 
+				catch (NoClassDefFoundError e)
+				{
+					// TODO: Missing API, what should we do here?
+				}
+				catch (ClassNotFoundException e)
+				{
+					// TODO: Missing API, what should we do here?
 				}
 			}
 		}
@@ -58,10 +69,34 @@ public class Builder {
 		jniPrimitiveTypesMappings.put(char.class, "C");
 	}
 	
+	private static Boolean isClassPublic(Class<?> clazz){
+		Boolean isPublic = true;
+		
+		try
+		{
+			Class<?> currClass = clazz;
+			while(currClass != null)
+			{
+				if(!Modifier.isPublic(currClass.getModifiers()))
+				{
+					isPublic = false;
+					break;
+				}
+				
+				currClass = currClass.getEnclosingClass();
+			}
+		}
+		catch(NoClassDefFoundError e)
+		{
+			isPublic = false;
+		}
+		
+		return isPublic;
+	}
+	
 	private static void generate(Class<?> clazz, TreeNode root) throws Exception
 	{
-		int classModifiers = clazz.getModifiers();
-		if (!Modifier.isPublic(classModifiers))
+		if (!isClassPublic(clazz))
 		{
 			return;
 		}
@@ -165,14 +200,9 @@ public class Builder {
 		}
 		
 		TreeNode node = root;
-		String name = clazz.isPrimitive() ? jniPrimitiveTypesMappings.get(clazz.getClass()) : clazz.getSimpleName();
+		String name = clazz.getSimpleName();
 		
-		String[] packages = null;
-		if (clazz.isPrimitive()) {
-			packages = new String[0];
-		} else {
-			packages = clazz.getPackage().getName().split("\\.");
-		}
+		String[] packages = clazz.getPackage().getName().split("\\.");
 		
 		for (String p: packages)
 		{
