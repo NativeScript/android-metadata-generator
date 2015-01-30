@@ -15,7 +15,8 @@ public class Writer {
 	private static byte[] writeInt_buff = new byte[4];
 	private static byte[] writeTreeNodeId_buff = new byte[2];
 	private static byte[] writeLength_lenBuff = new byte[2];
-	
+	private static byte[] writeModifierFinal_buff = new byte[1];
+
 	private static int writeUniqueName(String name, HashMap<String, Integer> uniqueStrings, FileOutputStream outStringsStream) throws Exception
 	{
 		int position = (int) outStringsStream.getChannel().position();
@@ -23,9 +24,10 @@ public class Writer {
 		int len = name.length();
 		writeUniqueName_lenBuff[0] = (byte) (len & 0xFF);
 		writeUniqueName_lenBuff[1] = (byte) ((len >> 8) & 0xFF);
+		
 		outStringsStream.write(writeUniqueName_lenBuff);
 		outStringsStream.write(name.getBytes("UTF-8"));
-
+ 
 		uniqueStrings.put(name, position);
 		
 		return position;
@@ -69,6 +71,15 @@ public class Writer {
 		out.write(writeTreeNodeId_buff);
 	}
 	
+	private static void writeFinalModifier(FieldInfo fi, FileOutputStream out) throws Exception 
+	{
+		if(fi.isFinalType)
+		{
+			writeModifierFinal_buff[0] = (byte) (TreeNode.Final & 0xFF);
+			out.write(writeModifierFinal_buff);
+		}
+	}
+	
 	private static int writeLength(int length, FileOutputStream out) throws Exception
 	{
 		writeLength_lenBuff[0] = (byte) (length & 0xFF);
@@ -90,6 +101,10 @@ public class Writer {
 		
 		int commonInterfacePrefixPosition = writeUniqueName("com/tns/", uniqueStrings, outStringsStream);
 		
+		//this while loop fils the treeStringsStream.dat file with a sequence of the
+		//length and name of all the nodes in the built tree + the primitive types used by method signatures
+		//the "n" variable holds all the nodes -> n.offsetName is the initial position where you can read the (length/name) pair
+		//n.offsetName is used to later find the node names in the treeStringsStream.dat file
 		d.push(root);
 		while (!d.isEmpty())
 		{
@@ -206,9 +221,10 @@ public class Writer {
 				for (int i=0; i<len; i++)
 				{
 					FieldInfo fi = n.instanceFields.get(i);
-					int pos = uniqueStrings.get(fi.name).intValue();
-					writeInt(pos, outValueStream);
-					writeTreeNodeId(fi.valueType, outValueStream);
+					int pos = uniqueStrings.get(fi.name).intValue(); //get start position of the name
+					writeInt(pos, outValueStream); // write start position of the name of the variable
+					writeTreeNodeId(fi.valueType, outValueStream); //pointer to the value type of the variable
+					writeFinalModifier(fi, outValueStream);
 				}
 
 				len = writeLength(n.staticFields.size(), outValueStream);
@@ -218,6 +234,7 @@ public class Writer {
 					int pos = uniqueStrings.get(fi.name).intValue();
 					writeInt(pos, outValueStream);
 					writeTreeNodeId(fi.valueType, outValueStream);
+					writeFinalModifier(fi, outValueStream);
 					writeTreeNodeId(fi.declaringType, outValueStream);
 				}
 			}
