@@ -46,17 +46,8 @@ public class TreeNode implements java.io.Serializable {
 	public static final byte Static = 1 << 2;
 	public static final byte Array = 1 << 3;
 	public static final byte Primitive = 1 << 4;
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-	
-	public static final byte Final = 1;
-	
->>>>>>> a36aa62... fixed bug in metadata generation
-=======
 	public static final byte Final = 1 << 5;
 	
->>>>>>> c4b2b47823c956332359a3d899ac9d5eff8c06b9
 
 	public TreeNode() {
 		children = new ArrayList<TreeNode>();

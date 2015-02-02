@@ -71,17 +71,6 @@ public class Writer {
 		out.write(writeTreeNodeId_buff);
 	}
 	
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-	private static void writeFinalModifier(FieldInfo fi, FileOutputStream out) throws Exception 
-	{
-		writeModifierFinal_buff[0] = fi.isFinalType ? TreeNode.Final : 0;
-		out.write(writeModifierFinal_buff);
-	}
-	
->>>>>>> a36aa62... fixed bug in metadata generation
-=======
 	private static void writeFinalModifier(FieldInfo fi, FileOutputStream out) throws Exception 
 	{
 		if(fi.isFinalType)
@@ -91,7 +80,6 @@ public class Writer {
 		}
 	}
 	
->>>>>>> c4b2b47823c956332359a3d899ac9d5eff8c06b9
 	private static int writeLength(int length, FileOutputStream out) throws Exception
 	{
 		writeLength_lenBuff[0] = (byte) (length & 0xFF);
