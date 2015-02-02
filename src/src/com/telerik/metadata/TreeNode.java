@@ -46,8 +46,8 @@ public class TreeNode implements java.io.Serializable {
 	public static final byte Static = 1 << 2;
 	public static final byte Array = 1 << 3;
 	public static final byte Primitive = 1 << 4;
-	public static final byte Final = 1 << 5;
 	
+	public static final byte Final = 1;
 
 	public TreeNode() {
 		children = new ArrayList<TreeNode>();

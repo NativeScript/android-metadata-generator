@@ -73,11 +73,8 @@ public class Writer {
 	
 	private static void writeFinalModifier(FieldInfo fi, FileOutputStream out) throws Exception 
 	{
-		if(fi.isFinalType)
-		{
-			writeModifierFinal_buff[0] = (byte) (TreeNode.Final & 0xFF);
-			out.write(writeModifierFinal_buff);
-		}
+		writeModifierFinal_buff[0] = fi.isFinalType ? TreeNode.Final : 0;
+		out.write(writeModifierFinal_buff);
 	}
 	
 	private static int writeLength(int length, FileOutputStream out) throws Exception
