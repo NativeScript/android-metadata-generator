@@ -69,6 +69,15 @@ public class Writer {
 		out.write(writeTreeNodeId_buff);
 	}
 	
+<<<<<<< HEAD
+=======
+	private static void writeFinalModifier(FieldInfo fi, FileOutputStream out) throws Exception 
+	{
+		writeModifierFinal_buff[0] = fi.isFinalType ? TreeNode.Final : 0;
+		out.write(writeModifierFinal_buff);
+	}
+	
+>>>>>>> a36aa62... fixed bug in metadata generation
 	private static int writeLength(int length, FileOutputStream out) throws Exception
 	{
 		writeLength_lenBuff[0] = (byte) (length & 0xFF);
