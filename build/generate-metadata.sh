@@ -20,5 +20,9 @@ executabledir=$(dirname $resolvedpath)
 mkdir bin
 
 java -cp $executabledir/../classes com.telerik.metadata.Generator $1
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+
 mv bin/* $2
 rmdir bin
