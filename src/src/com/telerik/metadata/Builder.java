@@ -173,14 +173,16 @@ public class Builder {
 			if (Modifier.isPublic(modifiers))
 			{
 				boolean isStatic = Modifier.isStatic(modifiers);
+				boolean isFinal = Modifier.isFinal(modifiers);//TODO: plamen5kov revise later
 				
-				FieldInfo fi = new FieldInfo(f.getName());
+ 				FieldInfo fi = new FieldInfo(f.getName());
 
 				Class<?> type = f.getType();
 				fi.valueType = getOrCreateNode(root, type);
-
+				fi.isFinalType = isFinal;
+				
 				if (isStatic) {
-					fi.declaringType = getOrCreateNode(root, f.getDeclaringClass());
+					fi.declaringType = getOrCreateNode(root, f.getDeclaringClass());					
 					node.staticFields.add(fi);
 				} else {
 					node.instanceFields.add(fi);
