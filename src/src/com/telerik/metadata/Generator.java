@@ -11,24 +11,12 @@ public class Generator {
 			dirName = args[0];
 		}
 		
+		String outName = "bin";
+		if(args != null && args.length > 1){
+			outName = args[1];
+		}
+		
 		TreeNode root = Builder.build(dirName);
-		Writer.writeTree(root);
-		
-//		String[] jars1 = { 
-//				"android17.jar", "ion-1.2.4.jar", 
-//				"androidasync-1.2.4.jar", 
-//				"support-v4-r13.jar", 
-//				"nativescript.jar",
-//				"Common.jar",
-//				"Primitives.jar",
-//				"Chart.jar"
-//				};
-//				
-//		JarLister.startGenerateMetadata(args, jars1);
-		
-//		String[] jars2 = { "android17.jar", "ion-1.2.4.jar", "androidasync-1.2.4.jar", "support-v4-r13.jar" };
-		
-//		JarLister.startGenerateBindings(args, jars2);
-		
+		Writer.writeTree(outName, root);
 	}
 }

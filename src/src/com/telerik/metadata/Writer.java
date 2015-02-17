@@ -1,5 +1,6 @@
 package com.telerik.metadata;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -86,13 +87,13 @@ public class Writer {
 		return length;
 	}
 	
-	public static void writeTree(TreeNode root) throws Exception
+	public static void writeTree(String outputDir, TreeNode root) throws Exception
 	{
 		short curId = 0;
 
 		ArrayDeque<TreeNode> d = new ArrayDeque<TreeNode>();
 		
-		FileOutputStream outStringsStream = new FileOutputStream("bin/treeStringsStream.dat");
+		FileOutputStream outStringsStream = new FileOutputStream(new File(outputDir, "treeStringsStream.dat"));
 		
 		HashMap<String, Integer> uniqueStrings = new HashMap<String, Integer>();
 		
@@ -163,7 +164,7 @@ public class Writer {
 		outStringsStream.flush();
 		outStringsStream.close();
 		
-		FileOutputStream outValueStream = new FileOutputStream("bin/treeValueStream.dat");
+		FileOutputStream outValueStream = new FileOutputStream(new File(outputDir, "treeValueStream.dat"));
 		writeInt(0, outValueStream);
 		
 		final int array_offset = 1000 * 1000 * 1000;
@@ -274,7 +275,7 @@ public class Writer {
 			}
 		}
 		
-		FileOutputStream outNodeStream = new FileOutputStream("bin/treeNodeStream.dat");
+		FileOutputStream outNodeStream = new FileOutputStream(new File(outputDir, "treeNodeStream.dat"));
 		int[] nodeData = new int[3];
 		
 		ByteBuffer byteBuffer = ByteBuffer.allocate(nodeData.length * 4);

@@ -30,20 +30,9 @@ public class NSClassLoader extends URLClassLoader {
 	}
 	
 	public void loadDir(String path){
-		// replace all backward slashes with forward ones (back slash is not a valid URI component)
-		path = path.replace("\\", "/");
-		URI workingDir = new File("").toURI();
-		
-		try {
-			URI pathUri = new URI(path);
-			
-			File dir = new File(workingDir.resolve(pathUri));
-			this.traverseDir(dir);
-			this.populateClassNames();
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		File dir = new File(path);
+		this.traverseDir(dir);
+		this.populateClassNames();
 	}
 	
 	private void populateClassNames(){
