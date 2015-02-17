@@ -97,7 +97,7 @@ public class Writer {
 		
 		HashMap<String, Integer> uniqueStrings = new HashMap<String, Integer>();
 		
-		int commonInterfacePrefixPosition = writeUniqueName("com/tns/", uniqueStrings, outStringsStream);
+		int commonInterfacePrefixPosition = writeUniqueName("com/tns/gen/", uniqueStrings, outStringsStream);
 		
 		//this while loop fils the treeStringsStream.dat file with a sequence of the
 		//length and name of all the nodes in the built tree + the primitive types used by method signatures
