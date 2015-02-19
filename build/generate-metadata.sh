@@ -10,7 +10,7 @@ if [ -d "bin" ]; then
     
     echo "Listing existing bin directory files"
     pwd
-    ls -l ./bin/*
+    ls -l $(pwd)/bin/*
     echo "Listing existing bin directory files. end"
 
     exit -1
@@ -37,7 +37,7 @@ echo "Listing input files. end"
 
 echo "Listing output files"
 pwd
-ls -l ./bin/*
+ls -l $(pwd)/bin/*
 echo "Listing output files. end"
 
 mv bin/* $2
