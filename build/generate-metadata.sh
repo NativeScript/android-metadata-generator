@@ -24,7 +24,13 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
+echo "Listing input files"
+ls -l $1/*
+echo "Listing input files. end"
+
+echo "Listing output files"
 ls -l bin/*
+echo "Listing output files. end"
 
 mv bin/* $2
 
