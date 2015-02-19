@@ -24,7 +24,7 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-ls -l bin/
+ls -l bin/*
 
 mv bin/* $2
 
