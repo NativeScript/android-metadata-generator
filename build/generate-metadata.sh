@@ -2,12 +2,18 @@
 
 if [ "$#" -lt "2" ]; then
     echo "No arguments supplied. Usage: $0 [path-to-jars-to-generate-metadata-for] [output-path]"
-    exit
+    exit -1
 fi
 
 if [ -d "bin" ]; then
-    echo "bin folder found! In its current version the metadata generator uses a bin folder for a temporary metadata output location!"
-    exit
+    echo "bin directory found! In its current version the metadata generator uses a bin directory for a temporary metadata output location!"
+    
+    echo "Listing existing bin directory files"
+    pwd
+    ls -l bin/*
+    echo "Listing existing bin directory files. end"
+
+    exit -1
 fi
 
 if [ ! -d $2 ]; then
@@ -25,10 +31,12 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Listing input files"
+pwd
 ls -l $1/*
 echo "Listing input files. end"
 
 echo "Listing output files"
+pwd
 ls -l bin/*
 echo "Listing output files. end"
 
