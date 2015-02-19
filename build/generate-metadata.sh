@@ -2,7 +2,7 @@
 
 if [ "$#" -lt "2" ]; then
     echo "No arguments supplied. Usage: $0 [path-to-jars-to-generate-metadata-for] [output-path]"
-    exit -1
+    exit
 fi
 
 if [ -d "bin" ]; then
@@ -13,7 +13,7 @@ if [ -d "bin" ]; then
     ls -l $(pwd)/bin/*
     echo "Listing existing bin directory files. end"
 
-    exit -1
+    exit
 fi
 
 if [ ! -d $2 ]; then
