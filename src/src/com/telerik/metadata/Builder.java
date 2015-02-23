@@ -46,11 +46,19 @@ public class Builder {
 				} 
 				catch (NoClassDefFoundError e)
 				{
-					// TODO: Missing API, what should we do here?
+					System.out.println("Skip " + className);
 				}
 				catch (ClassNotFoundException e)
 				{
-					// TODO: Missing API, what should we do here?
+					System.out.println("Skip " + className);
+				}
+				catch (IllegalAccessError e)
+				{
+					System.out.println("Skip " + className);
+				}
+				catch (Exception e)
+				{
+					System.out.println("Skip " + className);
 				}
 			}
 		}
