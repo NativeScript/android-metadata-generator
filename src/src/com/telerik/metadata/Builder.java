@@ -26,7 +26,6 @@ public class Builder {
 	public static TreeNode build(String dir) throws Exception{
 		NSClassLoader loader = NSClassLoader.getInstance();
 		loader.loadDir(dir);
-		
 		initialize();
 		
 		TreeNode root = TreeNode.getRoot();
@@ -44,19 +43,7 @@ public class Builder {
 					Class<?> clazz = Class.forName(className, false, loader);
 					generate(clazz, root);
 				} 
-				catch (NoClassDefFoundError e)
-				{
-					System.out.println("Skip " + className);
-				}
-				catch (ClassNotFoundException e)
-				{
-					System.out.println("Skip " + className);
-				}
-				catch (IllegalAccessError e)
-				{
-					System.out.println("Skip " + className);
-				}
-				catch (Exception e)
+				catch (Throwable e)
 				{
 					System.out.println("Skip " + className);
 				}
