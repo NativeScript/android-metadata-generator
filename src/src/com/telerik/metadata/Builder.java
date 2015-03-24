@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -108,41 +109,10 @@ public class Builder
 
 		TreeNode node = getOrCreateNode(root, clazz);
 
-		// Method[] methods = clazz.getDeclaredMethods();
-		Method[] tmp = clazz.getMethods();
-		ArrayList<Method> methods = new ArrayList<Method>();
-		for (Method m : tmp)
-		{
-			methods.add(m);
-		}
-		Class<?> curClass = clazz;
-		while (curClass != null)
-		{
-			tmp = curClass.getDeclaredMethods();
-			for (Method m : tmp)
-			{
-				int modifiers = m.getModifiers();
-				if (Modifier.isProtected(modifiers) && !Modifier.isStatic(modifiers))
-				{
-					if (isMethodOverrriden(m))
-						continue;
-
-					methods.add(m);
-				}
-			}
-			curClass = curClass.getSuperclass();
-		}
-
-		if (clazz.isInterface())
-		{
-			for (Method m : Object.class.getDeclaredMethods())
-			{
-				methods.add(m);
-			}
-		}
-
-		Collections.sort(methods, methodNameComparator);
-
+		Method[] methods = clazz.getDeclaredMethods();
+		
+		Arrays.sort(methods, methodNameComparator);
+		
 		for (Method m : methods)
 		{
 			if (m.isSynthetic())
@@ -173,7 +143,7 @@ public class Builder
 			}
 		}
 
-		Field[] fields = clazz.getFields();
+		Field[] fields = clazz.getDeclaredFields();
 
 		for (Field f : fields)
 		{
@@ -283,10 +253,10 @@ public class Builder
 			}
 		}
 		node = child;
-
-		Class<?> baseClass = clazz.getSuperclass();
-		if (baseClass != null)
-		{
+		Class<?> baseClass = clazz.isInterface()
+							? Object.class
+							: clazz.getSuperclass();
+		if (baseClass != null){
 			node.baseClassNode = getOrCreateNode(root, baseClass);
 		}
 
