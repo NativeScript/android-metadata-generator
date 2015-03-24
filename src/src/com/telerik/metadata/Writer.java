@@ -1,7 +1,5 @@
 package com.telerik.metadata;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
@@ -12,15 +10,29 @@ import com.telerik.metadata.TreeNode.FieldInfo;
 import com.telerik.metadata.TreeNode.MethodInfo;
 
 public class Writer {
-	private static byte[] writeUniqueName_lenBuff = new byte[2];
-	private static byte[] writeInt_buff = new byte[4];
-	private static byte[] writeTreeNodeId_buff = new byte[2];
-	private static byte[] writeLength_lenBuff = new byte[2];
-	private static byte[] writeModifierFinal_buff = new byte[1];
-
-	private static int writeUniqueName(String name, HashMap<String, Integer> uniqueStrings, FileOutputStream outStringsStream) throws Exception
+	
+	private final StreamWriter outNodeStream; 
+	private final StreamWriter outValueStream;
+	private final StreamWriter outStringsStream; 
+	
+	private int commonInterfacePrefixPosition;
+	
+	public Writer(StreamWriter outNodeStream, StreamWriter outValueStream, StreamWriter outStringsStream)
 	{
-		int position = (int) outStringsStream.getChannel().position();
+		this.outNodeStream = outNodeStream;
+		this.outValueStream = outValueStream;
+		this.outStringsStream = outStringsStream; 
+	}
+	
+	private final static byte[] writeUniqueName_lenBuff = new byte[2];
+	private final static byte[] writeInt_buff = new byte[4];
+	private final static byte[] writeTreeNodeId_buff = new byte[2];
+	private final static byte[] writeLength_lenBuff = new byte[2];
+	private final static byte[] writeModifierFinal_buff = new byte[1];
+
+	private static int writeUniqueName(String name, HashMap<String, Integer> uniqueStrings, StreamWriter outStringsStream) throws Exception
+	{
+		int position = outStringsStream.getPosition();
 		
 		int len = name.length();
 		writeUniqueName_lenBuff[0] = (byte) (len & 0xFF);
@@ -34,7 +46,7 @@ public class Writer {
 		return position;
 	}
 	
-	private static void writeInt(int value, FileOutputStream out) throws Exception
+	private static void writeInt(int value, StreamWriter out) throws Exception
 	{
 		writeInt_buff[0] = (byte)(value & 0xFF);
 		writeInt_buff[1] = (byte)((value >> 8) & 0xFF);
@@ -44,7 +56,7 @@ public class Writer {
 		out.write(writeInt_buff);
 	}
 	
-	private static void writeMethodInfo(MethodInfo mi, HashMap<String, Integer> uniqueStrings, FileOutputStream outValueStream) throws Exception
+	private static void writeMethodInfo(MethodInfo mi, HashMap<String, Integer> uniqueStrings, StreamWriter outValueStream) throws Exception
 	{
 		int pos = uniqueStrings.get(mi.name).intValue();
 		writeInt(pos, outValueStream);
@@ -58,7 +70,7 @@ public class Writer {
 		}
 	}
 	
-	private static void writeTreeNodeId(TreeNode node, FileOutputStream out) throws Exception
+	private static void writeTreeNodeId(TreeNode node, StreamWriter out) throws Exception
 	{
 		if (node == null)
 		{
@@ -72,13 +84,13 @@ public class Writer {
 		out.write(writeTreeNodeId_buff);
 	}
 	
-	private static void writeFinalModifier(FieldInfo fi, FileOutputStream out) throws Exception 
+	private static void writeFinalModifier(FieldInfo fi, StreamWriter out) throws Exception 
 	{
 		writeModifierFinal_buff[0] = fi.isFinalType ? TreeNode.Final : 0;
 		out.write(writeModifierFinal_buff);
 	}
 	
-	private static int writeLength(int length, FileOutputStream out) throws Exception
+	private static int writeLength(int length, StreamWriter out) throws Exception
 	{
 		writeLength_lenBuff[0] = (byte) (length & 0xFF);
 		writeLength_lenBuff[1] = (byte) ((length >> 8) & 0xFF);
@@ -87,17 +99,65 @@ public class Writer {
 		return length;
 	}
 	
-	public static void writeTree(String outputDir, TreeNode root) throws Exception
+	public void writeClassValue(StreamWriter writer, HashMap<String, Integer> stringsMap, TreeNode n) throws Exception
+	{
+		writer.write(n.nodeType);
+		
+		//
+		writeTreeNodeId(n.baseClassNode, writer);
+		//
+		
+		if ((n.nodeType & TreeNode.Interface) == TreeNode.Interface)
+		{
+			writer.write((byte)1);
+			writeInt(commonInterfacePrefixPosition, writer);
+		}
+		
+		int len = writeLength(n.instanceMethods.size(), writer);
+		for (int i=0; i<len; i++)
+		{
+			writeMethodInfo(n.instanceMethods.get(i), stringsMap, writer);
+		}
+		
+		len = writeLength(n.instanceFields.size(), writer);
+		for (int i=0; i<len; i++)
+		{
+			FieldInfo fi = n.instanceFields.get(i);
+			int pos = stringsMap.get(fi.name).intValue(); //get start position of the name
+			writeInt(pos, writer); // write start position of the name of the variable
+			writeTreeNodeId(fi.valueType, writer); //pointer to the value type of the variable
+			writeFinalModifier(fi, writer);
+		}
+		
+		len = writeLength(n.staticMethods.size(), writer);
+		for (int i=0; i<len; i++)
+		{
+			MethodInfo mi = n.staticMethods.get(i);
+			writeMethodInfo(mi, stringsMap, writer);
+			writeTreeNodeId(mi.declaringType, writer);
+		}
+
+		len = writeLength(n.staticFields.size(), writer);
+		for (int i=0; i<len; i++)
+		{
+			FieldInfo fi = n.staticFields.get(i);
+			int pos = stringsMap.get(fi.name).intValue();
+			writeInt(pos, writer);
+			writeTreeNodeId(fi.valueType, writer);
+			writeFinalModifier(fi, writer);
+			writeTreeNodeId(fi.declaringType, writer);
+		}
+	}
+	
+	public void writeTree(TreeNode root) throws Exception
 	{
 		short curId = 0;
 
 		ArrayDeque<TreeNode> d = new ArrayDeque<TreeNode>();
 		
-		FileOutputStream outStringsStream = new FileOutputStream(new File(outputDir, "treeStringsStream.dat"));
-		
 		HashMap<String, Integer> uniqueStrings = new HashMap<String, Integer>();
 		
-		int commonInterfacePrefixPosition = writeUniqueName("com/tns/", uniqueStrings, outStringsStream);
+		commonInterfacePrefixPosition = writeUniqueName("com/tns/gen/", uniqueStrings, outStringsStream);
 		
 		//this while loop fils the treeStringsStream.dat file with a sequence of the
 		//length and name of all the nodes in the built tree + the primitive types used by method signatures
@@ -164,7 +224,6 @@ public class Writer {
 		outStringsStream.flush();
 		outStringsStream.close();
 		
-		FileOutputStream outValueStream = new FileOutputStream(new File(outputDir, "treeValueStream.dat"));
 		writeInt(0, outValueStream);
 		
 		final int array_offset = 1000 * 1000 * 1000;
@@ -180,61 +239,16 @@ public class Writer {
 			}
 			else if ((n.nodeType & TreeNode.Primitive) == TreeNode.Primitive)
 			{
-				n.offsetValue = (int) outValueStream.getChannel().position();
+				n.offsetValue = (int) outValueStream.getPosition();
 				
 				outValueStream.write(n.nodeType);
 			}
 			else if (((n.nodeType & TreeNode.Class) == TreeNode.Class)
 					|| ((n.nodeType & TreeNode.Interface) == TreeNode.Interface))
 			{
-				n.offsetValue = (int) outValueStream.getChannel().position();
+				n.offsetValue = (int) outValueStream.getPosition();
 				
-				outValueStream.write(n.nodeType);
-				
-				//
-				writeTreeNodeId(n.baseClassNode, outValueStream);
-				//
-				
-				if ((n.nodeType & TreeNode.Interface) == TreeNode.Interface)
-				{
-					outValueStream.write(1);
-					writeInt(commonInterfacePrefixPosition, outValueStream);
-				}
-				
-				int len = writeLength(n.instanceMethods.size(), outValueStream);
-				for (int i=0; i<len; i++)
-				{
-					writeMethodInfo(n.instanceMethods.get(i), uniqueStrings, outValueStream);
-				}
-				
-				len = writeLength(n.staticMethods.size(), outValueStream);
-				for (int i=0; i<len; i++)
-				{
-					MethodInfo mi = n.staticMethods.get(i);
-					writeMethodInfo(mi, uniqueStrings, outValueStream);
-					writeTreeNodeId(mi.declaringType, outValueStream);
-				}
-				
-				len = writeLength(n.instanceFields.size(), outValueStream);
-				for (int i=0; i<len; i++)
-				{
-					FieldInfo fi = n.instanceFields.get(i);
-					int pos = uniqueStrings.get(fi.name).intValue(); //get start position of the name
-					writeInt(pos, outValueStream); // write start position of the name of the variable
-					writeTreeNodeId(fi.valueType, outValueStream); //pointer to the value type of the variable
-					writeFinalModifier(fi, outValueStream);
-				}
-
-				len = writeLength(n.staticFields.size(), outValueStream);
-				for (int i=0; i<len; i++)
-				{
-					FieldInfo fi = n.staticFields.get(i);
-					int pos = uniqueStrings.get(fi.name).intValue();
-					writeInt(pos, outValueStream);
-					writeTreeNodeId(fi.valueType, outValueStream);
-					writeFinalModifier(fi, outValueStream);
-					writeTreeNodeId(fi.declaringType, outValueStream);
-				}
+				writeClassValue(outValueStream, uniqueStrings, n);
 			}
 			else if ((n.nodeType & TreeNode.Array) == TreeNode.Array)
 			{
@@ -275,7 +289,6 @@ public class Writer {
 			}
 		}
 		
-		FileOutputStream outNodeStream = new FileOutputStream(new File(outputDir, "treeNodeStream.dat"));
 		int[] nodeData = new int[3];
 		
 		ByteBuffer byteBuffer = ByteBuffer.allocate(nodeData.length * 4);
