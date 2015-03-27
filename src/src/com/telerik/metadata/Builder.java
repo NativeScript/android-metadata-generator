@@ -5,7 +5,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 
@@ -109,6 +108,7 @@ public class Builder
 
 		TreeNode node = getOrCreateNode(root, clazz);
 
+		Method[] allMethods = clazz.getMethods();
 		Method[] methods = clazz.getDeclaredMethods();
 		
 		Arrays.sort(methods, methodNameComparator);
@@ -124,6 +124,20 @@ public class Builder
 				boolean isStatic = Modifier.isStatic(modifiers);
 
 				MethodInfo mi = new MethodInfo(m.getName());
+				int countUnique = 0;
+				for (Method m1: allMethods)
+				{
+					int m1Modifiers = m1.getModifiers();
+					boolean m1IsStatic = Modifier.isStatic(m1Modifiers);
+					if (!m1.isSynthetic() && (Modifier.isPublic(m1Modifiers) || Modifier.isProtected(m1Modifiers))
+						&& (isStatic == m1IsStatic)
+						&& (m1.getName().equals(mi.name) && (m1.getParameterCount() == m.getParameterCount())))
+					{
+						if (++countUnique > 1)
+							break;
+					}
+				}
+				mi.isResolved = countUnique == 1;
 
 				Class<?>[] params = m.getParameterTypes();
 				mi.signature = getMethodSignature(root, m.getReturnType(), params);// +
@@ -327,71 +341,5 @@ public class Builder
 		}
 
 		return sig;
-	}
-
-	private static boolean isMethodOverrriden(final Method myMethod)
-	{
-		Class<?> declaringClass = myMethod.getDeclaringClass();
-		Class<?>[] myMethodParams = myMethod.getParameterTypes();
-
-		if (declaringClass.equals(Object.class))
-		{
-			return false;
-		}
-
-		try
-		{
-			Class<?> sup = declaringClass.getSuperclass();
-			Method[] dm = sup.getDeclaredMethods();
-
-			for (Method m : dm)
-			{
-				if (!m.getName()
-					.equals(myMethod.getName()))
-				{
-					continue;
-				}
-
-				Class<?>[] mp = m.getParameterTypes();
-				if (mp.length != myMethodParams.length)
-				{
-					continue;
-				}
-
-				boolean same = true;
-				for (int i = 0; i < mp.length; i++)
-				{
-					if (!mp[i].equals(myMethodParams[i]))
-					{
-						same = false;
-						break;
-					}
-				}
-				if (same)
-				{
-					return true;
-				}
-			}
-
-			declaringClass.getSuperclass()
-				.getMethod(myMethod.getName(), myMethod.getParameterTypes());
-			return true;
-		}
-		catch (NoSuchMethodException e)
-		{
-			for (Class<?> iface : declaringClass.getInterfaces())
-			{
-				try
-				{
-					iface.getMethod(myMethod.getName(), myMethod.getParameterTypes());
-					return true;
-				}
-				catch (NoSuchMethodException ignored)
-				{
-
-				}
-			}
-			return false;
-		}
 	}
 }

@@ -9,12 +9,14 @@ public class TreeNode implements java.io.Serializable
 		public MethodInfo(String name)
 		{
 			this.name = name;
+			this.isResolved = false;
 			signature = new ArrayList<TreeNode>();
 		}
 
 		public String name;
 		public ArrayList<TreeNode> signature;
 		public TreeNode declaringType;
+		public boolean isResolved;
 	}
 
 	public static TreeNode getRoot()

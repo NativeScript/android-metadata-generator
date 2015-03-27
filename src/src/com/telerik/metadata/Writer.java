@@ -57,9 +57,11 @@ public class Writer {
 	}
 	private static void writeMethodInfo(MethodInfo mi, HashMap<String, Integer> uniqueStrings, StreamWriter outValueStream) throws Exception
 	{
-		int pos = uniqueStrings.get(mi.name)
-			.intValue();
+		int pos = uniqueStrings.get(mi.name).intValue();
 		writeInt(pos, outValueStream);
+		
+		byte isResolved = (byte)(mi.isResolved ? 1 : 0);
+		outValueStream.write(isResolved);
 
 		int sigLen = writeLength(mi.signature.size(), outValueStream);
 		for (int i = 0; i < sigLen; i++)
