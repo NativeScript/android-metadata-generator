@@ -131,7 +131,7 @@ public class Builder
 					boolean m1IsStatic = Modifier.isStatic(m1Modifiers);
 					if (!m1.isSynthetic() && (Modifier.isPublic(m1Modifiers) || Modifier.isProtected(m1Modifiers))
 						&& (isStatic == m1IsStatic)
-						&& (m1.getName().equals(mi.name) && (m1.getParameterCount() == m.getParameterCount())))
+						&& (m1.getName().equals(mi.name) && (m1.getParameterTypes().length == m.getParameterTypes().length)))
 					{
 						if (++countUnique > 1)
 							break;
