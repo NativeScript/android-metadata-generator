@@ -6,7 +6,13 @@ if [ "$#" -lt "2" ]; then
 fi
 
 if [ -d "bin" ]; then
-    echo "bin folder found! In its current version the metadata generator uses a bin folder for a temporary metadata output location!"
+    echo "bin directory found! In its current version the metadata generator uses a bin directory for a temporary metadata output location!"
+    
+    echo "Listing existing bin directory files"
+    pwd
+    ls -l $(pwd)/bin/*
+    echo "Listing existing bin directory files. end"
+
     exit
 fi
 
@@ -24,7 +30,15 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-ls -l bin/
+echo "Listing input files"
+pwd
+ls -l $1/*
+echo "Listing input files. end"
+
+echo "Listing output files"
+pwd
+ls -l $(pwd)/bin/*
+echo "Listing output files. end"
 
 mv bin/* $2
 

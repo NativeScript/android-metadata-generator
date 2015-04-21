@@ -2,19 +2,25 @@ package com.telerik.metadata;
 
 import java.util.ArrayList;
 
-public class TreeNode implements java.io.Serializable {
-	public static class MethodInfo {
-		public MethodInfo(String name) {
+public class TreeNode implements java.io.Serializable
+{
+	public static class MethodInfo
+	{
+		public MethodInfo(String name)
+		{
 			this.name = name;
+			this.isResolved = false;
 			signature = new ArrayList<TreeNode>();
 		}
 
 		public String name;
 		public ArrayList<TreeNode> signature;
 		public TreeNode declaringType;
+		public boolean isResolved;
 	}
-	
-	public static TreeNode getRoot(){
+
+	public static TreeNode getRoot()
+	{
 		TreeNode root = new TreeNode();
 		root.setName("");
 		root.children.add(BYTE);
@@ -25,12 +31,14 @@ public class TreeNode implements java.io.Serializable {
 		root.children.add(DOUBLE);
 		root.children.add(BOOLEAN);
 		root.children.add(CHAR);
-		
+
 		return root;
 	}
 
-	public static class FieldInfo {
-		public FieldInfo(String name) {
+	public static class FieldInfo
+	{
+		public FieldInfo(String name)
+		{
 			this.name = name;
 		}
 
@@ -46,10 +54,11 @@ public class TreeNode implements java.io.Serializable {
 	public static final byte Static = 1 << 2;
 	public static final byte Array = 1 << 3;
 	public static final byte Primitive = 1 << 4;
-	
+
 	public static final byte Final = 1;
 
-	public TreeNode() {
+	public TreeNode()
+	{
 		children = new ArrayList<TreeNode>();
 
 		instanceMethods = new ArrayList<TreeNode.MethodInfo>();
@@ -66,16 +75,16 @@ public class TreeNode implements java.io.Serializable {
 	public static final TreeNode DOUBLE = getPrimitive("D", (byte) 6);
 	public static final TreeNode BOOLEAN = getPrimitive("Z", (byte) 7);
 	public static final TreeNode CHAR = getPrimitive("C", (byte) 8);
-	
+
 	public static TreeNode getPrimitive(Class<?> clazz) throws Exception
 	{
 		if (!clazz.isPrimitive())
 		{
 			throw new Exception("clazz must be primitive");
 		}
-		
+
 		String name = clazz.getSimpleName();
-		
+
 		if (name.equals("byte"))
 		{
 			return TreeNode.BYTE;
@@ -118,19 +127,20 @@ public class TreeNode implements java.io.Serializable {
 		}
 	}
 
-	private static TreeNode getPrimitive(String name, byte id) {
+	private static TreeNode getPrimitive(String name, byte id)
+	{
 		TreeNode node = new TreeNode();
 		node.setName(name);
 		node.nodeType = (byte) (Primitive + id);
 		node.offsetValue = 1;
 		return node;
 	}
-	
+
 	public String getName()
 	{
 		return _name;
 	}
-	
+
 	public void setName(String value)
 	{
 		_name = value;
@@ -157,13 +167,17 @@ public class TreeNode implements java.io.Serializable {
 
 	public ArrayList<TreeNode> children;
 
-	public TreeNode getChild(String childName) {
+	public TreeNode getChild(String childName)
+	{
 		TreeNode child = null;
 
-		for (TreeNode c : children) {
-			boolean found = c.getName().equals(childName);
+		for (TreeNode c : children)
+		{
+			boolean found = c.getName()
+				.equals(childName);
 
-			if (found) {
+			if (found)
+			{
 				child = c;
 				break;
 			}
@@ -172,14 +186,16 @@ public class TreeNode implements java.io.Serializable {
 		return child;
 	}
 
-	public TreeNode createChild(String childName) {
+	public TreeNode createChild(String childName)
+	{
 		TreeNode child = new TreeNode();
 		child.setName(childName);
 		children.add(child);
 		return child;
 	}
 
-	public TreeNode attachChild(Class<?> clazz) throws Exception {
+	public TreeNode attachChild(Class<?> clazz) throws Exception
+	{
 		TreeNode child = getPrimitive(clazz);
 		children.add(child);
 		return child;

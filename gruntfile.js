@@ -1,5 +1,4 @@
-//Builds the metadata generator tool and
-//   uses it to generate the Android metadata.
+//Builds the metadata generator tool
 
 var pathModule = require("path");
 
@@ -50,7 +49,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-exec");
     grunt.loadNpmTasks("grunt-contrib-copy");
-    
+
     grunt.registerTask("buildGenerator", [
                             "clean:tool",
                             "exec:antBuild"
