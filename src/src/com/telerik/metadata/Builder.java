@@ -117,7 +117,7 @@ public class Builder
 		{
 			if (m.isSynthetic())
 				continue;
-
+			
 			int modifiers = m.getModifiers();
 			if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers))
 			{
@@ -145,18 +145,22 @@ public class Builder
 																					// +
 																					// params.length);
 
-				if (isStatic)
+				if (mi.signature != null)
 				{
-					mi.declaringType = getOrCreateNode(root, m.getDeclaringClass());
-					node.staticMethods.add(mi);
-				}
-				else
-				{
-					node.instanceMethods.add(mi);
+					if (isStatic)
+					{
+						mi.declaringType = getOrCreateNode(root, m.getDeclaringClass());
+						node.staticMethods.add(mi);
+					}
+					else
+					{
+						node.instanceMethods.add(mi);
+					}
 				}
 			}
 		}
 
+		
 		Field[] fields = clazz.getDeclaredFields();
 
 		for (Field f : fields)
@@ -222,6 +226,11 @@ public class Builder
 		ArrayList<Class<?>> outerClasses = new ArrayList<Class<?>>();
 		while (outer != null)
 		{
+			int outerModifiers = outer.getModifiers();
+			if (!Modifier.isPublic(outerModifiers))
+			{
+				return null;
+			}
 			outerClasses.add(outer);
 			outer = outer.getEnclosingClass();
 		}
@@ -337,6 +346,10 @@ public class Builder
 		for (Class<?> param : params)
 		{
 			node = getOrCreateNode(root, param);
+			if (node == null)
+			{
+				return null;
+			}
 			sig.add(node);
 		}
 
