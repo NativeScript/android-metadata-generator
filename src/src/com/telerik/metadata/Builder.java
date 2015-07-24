@@ -166,7 +166,7 @@ public class Builder
 		for (Field f : fields)
 		{
 			int modifiers = f.getModifiers();
-			if (Modifier.isPublic(modifiers))
+			if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers))
 			{
 				boolean isStatic = Modifier.isStatic(modifiers);
 				boolean isFinal = Modifier.isFinal(modifiers);// TODO:
