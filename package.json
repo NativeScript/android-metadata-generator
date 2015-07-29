@@ -3,7 +3,7 @@
   "description": "Telerik NativeScript Android Runtime Metadata Generator",
   "version": "0.0.1",
   "bin": {
-    "generate-metadata": "./bin/generate-metadata.sh"
+    "generate-metadata": "./bin/generate-metadata.js"
   },
   "files": [
     "classes/**/*.class",
