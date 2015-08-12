@@ -40,7 +40,8 @@ module.exports = function(grunt) {
             packageFiles: {
                 files: [
                     {src: "./package.json", dest: "./dist/"},
-                    {expand: true, src: "./generate-metadata.sh", cwd: "./build/", dest: "./dist/bin/"}
+                    {expand: true, src: "./generate-metadata.sh", cwd: "./build/", dest: "./dist/bin/"},
+                    {expand: true, src: "./generate-metadata.js", cwd: "./build/", dest: "./dist/bin/"}
                 ]
             }
         }
