@@ -1,0 +1,37 @@
+apply plugin: "java"
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/src'
+        }
+		println output
+    }
+	main.output.classesDir = "$rootDir/src/bin"
+}
+
+task cleanBuildDir << {
+	def srcDir
+	def collection = files { srcDir.listFiles() }
+	srcDir = file("build")
+	
+	collection.each {
+		f ->
+			println f.name
+			if(!(f.name == "generate-metadata.js" || f.name == "generate-metadata.sh")) {
+				delete f
+			}
+	}
+	
+}
+
+task cleanBin (type: Delete) {
+	delete "$rootDir/src/bin"
+}
+
+compileJava.dependsOn(cleanBin)
+build.dependsOn(compileJava)
+
+task full {
+	dependsOn build, cleanBuildDir
+}
