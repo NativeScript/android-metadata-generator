@@ -1,3 +1,8 @@
+/* 
+*	Packs metadata generator in a .tgz file in ~/dist folder
+*	to run:
+*			gradle pack
+*/
 apply plugin: "java"
 
 sourceSets {
@@ -5,9 +10,8 @@ sourceSets {
         java {
             srcDir 'src/src'
         }
-		println output
     }
-	main.output.classesDir = "$rootDir/src/bin"
+	main.output.classesDir = "$rootDir/dist/classes"
 }
 
 task cleanBuildDir << {
@@ -18,7 +22,7 @@ task cleanBuildDir << {
 	collection.each {
 		f ->
 			println f.name
-			if(!(f.name == "generate-metadata.js" || f.name == "generate-metadata.sh")) {
+			if(f.name != "generate-metadata.js" && f.name != "generate-metadata.sh") {
 				delete f
 			}
 	}
@@ -29,9 +33,35 @@ task cleanBin (type: Delete) {
 	delete "$rootDir/src/bin"
 }
 
-compileJava.dependsOn(cleanBin)
-build.dependsOn(compileJava)
-
-task full {
-	dependsOn build, cleanBuildDir
+task copyNecessaryFiles() {
+	outputs.upToDateWhen {		
+		!assemble.didWork
+	}
+	copy {
+		from "$rootDir/build"
+		into "$rootDir/dist/bin"
+	}
+	copy {
+		from "$rootDir/package.json"
+		into "$rootDir/dist"
+	}
 }
+
+task packMetadataGenerator (type: Exec) {
+	workingDir "$rootDir/dist"
+	
+	//run different cmd on linux
+	commandLine "cmd", "/c"
+	args "npm", "pack"
+}
+
+compileJava.dependsOn(cleanBin)
+cleanBuildDir.dependsOn(compileJava)
+copyNecessaryFiles.dependsOn(cleanBuildDir)
+packMetadataGenerator.dependsOn(copyNecessaryFiles)
+
+task pack {
+	dependsOn packMetadataGenerator
+}
+
+
