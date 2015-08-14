@@ -5,6 +5,8 @@
 */
 apply plugin: "java"
 
+def isWinOs = System.properties['os.name'].toLowerCase().contains('windows')
+
 sourceSets {
     main {
         java {
@@ -50,8 +52,10 @@ task copyNecessaryFiles() {
 task packMetadataGenerator (type: Exec) {
 	workingDir "$rootDir/dist"
 	
-	//run different cmd on linux
-	commandLine "cmd", "/c"
+	if(isWinOs) {
+		commandLine "cmd", "/c"
+	}
+	
 	args "npm", "pack"
 }
 
