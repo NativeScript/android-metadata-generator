@@ -1,4 +1,5 @@
 //Builds the metadata generator tool
+// pr-trigger
 
 var pathModule = require("path");
 
