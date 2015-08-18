@@ -1,7 +1,9 @@
 /* 
 *	Packs metadata generator in a .tgz file in ~/dist folder
-*	to run:
-*			gradle pack
+*	To build .tgz
+*			gradle packmg
+*	To build jar
+*			gradle jarmg
 */
 apply plugin: "java"
 
