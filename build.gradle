@@ -16,43 +16,42 @@ sourceSets {
 	main.output.classesDir = "$rootDir/dist/classes"
 }
 
-task cleanDist (type: Delete) {
-	def srcDir
-	def collection = files { srcDir.listFiles() }
-	srcDir = file("dist")
-	
-	collection.each { f -> delete f }
+task makeDistDir {
+	def distDir = new File("$rootDir/dist")
+	distDir.mkdirs()
 }
 
-task cleanBuildDir << {
-	def srcDir
-	def collection = files { srcDir.listFiles() }
-	srcDir = file("build")
-	
-	collection.each {
-		f ->
-			println f.name
-			if(f.name != "generate-metadata.js" && f.name != "generate-metadata.sh") {
-				delete f
-			}
-	}
+task cleanDist (type: Delete) {
+	delete "$rootDir/dist"
+}
+
+task cleanDistForJar (type: Delete) {
+	delete "$rootDir/dist"
+}
+
+task cleanBuildDir (type: Delete){
+	delete "$rootDir/build"
+}
+
+task cleanBuildDirForJar (type: Delete){
+	delete "$rootDir/build"
 }
 
 task cleanBin (type: Delete) {
 	delete "$rootDir/src/bin"
 }
 
-task copyNecessaryFiles() {
-	outputs.upToDateWhen {		
-		!assemble.didWork
-	}
-	copy {
-		from "$rootDir/build"
-		into "$rootDir/dist/bin"
-	}
-	copy {
-		from "$rootDir/package.json"
-		into "$rootDir/dist"
+task copyNecessaryFiles {
+	doLast {
+		copy {
+			from "$rootDir/helpers"
+			into "$rootDir/dist/bin"
+		}
+		
+		copy {
+			from "$rootDir/package.json"
+			into "$rootDir/dist"
+		}	
 	}
 }
 
@@ -66,14 +65,35 @@ task packMetadataGenerator (type: Exec) {
 	args "npm", "pack"
 }
 
-cleanBin.dependsOn(cleanDist)
+jar {
+    manifest {
+        attributes("Manifest-Version": "1.0",
+                   "Main-Class": "com.telerik.metadata.Generator")
+    }
+}
+
+task copyJarToDist (type: Copy) {
+	from "$rootDir/build/libs/android-metadata-generator.jar"
+	into "$rootDir/dist"
+}
+
+makeDistDir.dependsOn(cleanDist)
+cleanBin.dependsOn(makeDistDir)
 compileJava.dependsOn(cleanBin)
 cleanBuildDir.dependsOn(compileJava)
 copyNecessaryFiles.dependsOn(cleanBuildDir)
 packMetadataGenerator.dependsOn(copyNecessaryFiles)
 
-task pack {
+task packmg {
 	dependsOn packMetadataGenerator
+}
+
+cleanDistForJar.dependsOn(jar)
+copyJarToDist.dependsOn(cleanDistForJar)
+cleanBuildDirForJar.dependsOn(copyJarToDist)
+
+task jarmg {
+	dependsOn cleanBuildDirForJar
 }
 
 
