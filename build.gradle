@@ -61,10 +61,11 @@ task packMetadataGenerator (type: Exec) {
 	workingDir "$rootDir/dist"
 	
 	if(isWinOs) {
-		commandLine "cmd", "/c"
+		commandLine "cmd", "/c", "npm", "pack"
 	}
-	
-	args "npm", "pack"
+	else {
+		commandLine "npm", "pack"
+	}
 }
 
 jar {
