@@ -140,7 +140,7 @@ public class NSClassLoader extends URLClassLoader
 	private void processFile(File file) throws FileNotFoundException {
 		if (!file.exists() || file.isDirectory())
 		{
-			throw new FileNotFoundException(String.format("The file %1 you passed is invalid. The file cannot be a directory!", file.getName()));
+			throw new FileNotFoundException(String.format("The file %s you passed is invalid. The file cannot be a directory!", file.getName()));
 		}
 
 		onFile(file);
