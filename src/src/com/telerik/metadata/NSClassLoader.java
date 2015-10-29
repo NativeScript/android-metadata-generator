@@ -138,12 +138,18 @@ public class NSClassLoader extends URLClassLoader
 	}
 	
 	private void processFile(File file) throws FileNotFoundException {
-		if (!file.exists() || file.isDirectory())
+		if (!file.exists() && !file.getName().endsWith(".aar"))
 		{
-			throw new FileNotFoundException(String.format("The file %s you passed is invalid. The file cannot be a directory!", file.getName()));
+			throw new FileNotFoundException(String.format("The file: %s, you passed doesn't exist", file.getName()));
+		}
+		if(file.isDirectory()) {
+			throw new FileNotFoundException(String.format("The file: %s, you passed is invalid. The file cannot be a directory!", file.getName()));
 		}
 
-		onFile(file);
+		//metadata generator needs to be able to skip .aar files
+		if(file.getName().endsWith(".jar")) {
+			onFile(file);
+		}
 	}
 
 	private void onFile(File file)
