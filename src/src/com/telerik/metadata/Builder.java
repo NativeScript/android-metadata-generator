@@ -82,7 +82,8 @@ public class Builder
 			Class<?> currClass = clazz;
 			while (currClass != null)
 			{
-				if (!Modifier.isPublic(currClass.getModifiers()))
+				int modifiers = currClass.getModifiers();
+				if (!Modifier.isPublic(modifiers) && !Modifier.isProtected(modifiers))
 				{
 					isPublic = false;
 					break;
