@@ -2,6 +2,7 @@ package com.telerik.metadata;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -37,6 +38,15 @@ public class NSClassLoader extends URLClassLoader
 		File dir = new File(path);
 		this.traverseDir(dir);
 		this.populateClassNames();
+	}
+	
+	public void loadDirs(String[] paths) throws FileNotFoundException {
+		
+		for(int i = 0; i < paths.length; i++) {
+			File dir = new File(paths[i]);
+			this.processFile(dir);
+			this.populateClassNames();
+		}
 	}
 
 	private void populateClassNames()
@@ -124,6 +134,21 @@ public class NSClassLoader extends URLClassLoader
 			{
 				onFile(childFile);
 			}
+		}
+	}
+	
+	private void processFile(File file) throws FileNotFoundException {
+		if (!file.exists() && !file.getName().endsWith(".aar"))
+		{
+			throw new FileNotFoundException(String.format("The file: %s, you passed doesn't exist", file.getName()));
+		}
+		if(file.isDirectory()) {
+			throw new FileNotFoundException(String.format("The file: %s, you passed is invalid. The file cannot be a directory!", file.getName()));
+		}
+
+		//metadata generator needs to be able to skip .aar files
+		if(file.getName().endsWith(".jar")) {
+			onFile(file);
 		}
 	}
 

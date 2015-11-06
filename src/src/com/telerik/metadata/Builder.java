@@ -26,10 +26,10 @@ public class Builder
 	private static MethodNameComparator methodNameComparator = new MethodNameComparator();
 	private static HashMap<Class<?>, String> jniPrimitiveTypesMappings = new HashMap<Class<?>, String>();
 
-	public static TreeNode build(String dir) throws Exception
+	public static TreeNode build(String[] dirs) throws Exception
 	{
 		NSClassLoader loader = NSClassLoader.getInstance();
-		loader.loadDir(dir);
+		loader.loadDirs(dirs);
 		initialize();
 
 		TreeNode root = TreeNode.getRoot();
