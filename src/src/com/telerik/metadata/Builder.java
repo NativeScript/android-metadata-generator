@@ -54,7 +54,7 @@ public class Builder
 				catch (Throwable e)
 				{
 					System.out.println("Skip " + className);
-					System.out.println("\tError: " + e.getMessage());
+					System.out.println("\tError: " + e.toString());
 				}
 			}
 		}
