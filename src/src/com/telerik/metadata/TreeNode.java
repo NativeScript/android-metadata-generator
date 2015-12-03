@@ -1,19 +1,22 @@
 package com.telerik.metadata;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-public class TreeNode implements java.io.Serializable
+public class TreeNode
 {
 	public static class MethodInfo
 	{
-		public MethodInfo(String name)
+		public MethodInfo(Method m)
 		{
-			this.name = name;
+			this.name = m.getName();
+			this.sig = m.toGenericString();
 			this.isResolved = false;
 			signature = new ArrayList<TreeNode>();
 		}
 
 		public String name;
+		public String sig;
 		public ArrayList<TreeNode> signature;
 		public TreeNode declaringType;
 		public boolean isResolved;

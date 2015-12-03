@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.telerik.metadata.TreeNode.FieldInfo;
 import com.telerik.metadata.TreeNode.MethodInfo;
@@ -100,15 +101,25 @@ public class Builder
 
 		return isPublic;
 	}
-
+	
 	private static void generate(Class<?> clazz, TreeNode root) throws Exception
 	{
 		if (!isClassPublic(clazz))
 		{
 			return;
 		}
-
 		TreeNode node = getOrCreateNode(root, clazz);
+		
+		setNodeMembers(clazz, node, root);
+	}
+	
+	private static void setNodeMembers(Class<?> clazz, TreeNode node, TreeNode root) throws Exception
+	{
+		Map<String, MethodInfo> existingMethods = new HashMap<String, MethodInfo>();
+		for (MethodInfo mi: node.instanceMethods)
+		{
+			existingMethods.put(mi.sig, mi);
+		}
 
 		Method[] allMethods = clazz.getMethods();
 		Method[] methods = clazz.getDeclaredMethods();
@@ -125,7 +136,7 @@ public class Builder
 			{
 				boolean isStatic = Modifier.isStatic(modifiers);
 
-				MethodInfo mi = new MethodInfo(m.getName());
+				MethodInfo mi = new MethodInfo(m);
 				int countUnique = 0;
 				for (Method m1: allMethods)
 				{
@@ -142,10 +153,7 @@ public class Builder
 				mi.isResolved = countUnique == 1;
 
 				Class<?>[] params = m.getParameterTypes();
-				mi.signature = getMethodSignature(root, m.getReturnType(), params);// +
-																					// " "
-																					// +
-																					// params.length);
+				mi.signature = getMethodSignature(root, m.getReturnType(), params);
 
 				if (mi.signature != null)
 				{
@@ -156,6 +164,11 @@ public class Builder
 					}
 					else
 					{
+						String sig = m.toGenericString();
+						if (existingMethods.containsKey(sig))
+						{
+							continue;
+						}
 						node.instanceMethods.add(mi);
 					}
 				}
@@ -171,10 +184,8 @@ public class Builder
 			if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers))
 			{
 				boolean isStatic = Modifier.isStatic(modifiers);
-				boolean isFinal = Modifier.isFinal(modifiers);// TODO:
-																// plamen5kov
-																// revise later
-
+				boolean isFinal = Modifier.isFinal(modifiers);
+				
 				FieldInfo fi = new FieldInfo(f.getName());
 
 				Class<?> type = f.getType();
@@ -278,14 +289,28 @@ public class Builder
 			}
 		}
 		node = child;
-		Class<?> baseClass = clazz.isInterface()
-							? Object.class
-							: clazz.getSuperclass();
-		if (baseClass != null){
-			node.baseClassNode = getOrCreateNode(root, baseClass);
+		if (node.baseClassNode == null)
+		{
+			Class<?> baseClass = clazz.isInterface()
+								? Object.class
+								: clazz.getSuperclass();
+			if (baseClass != null)
+			{
+				node.baseClassNode = getOrCreateNode(root, baseClass);
+				copyBasePublicApi(baseClass, node, root);
+			}
 		}
 
 		return node;
+	}
+	
+	private static void copyBasePublicApi(Class<?> baseClass, TreeNode node, TreeNode root) throws Exception 
+	{
+		while ((baseClass != null) && !Modifier.isPublic(baseClass.getModifiers()))
+		{
+			setNodeMembers(baseClass, node, root);
+			baseClass = baseClass.getSuperclass();
+		}
 	}
 
 	private static TreeNode createArrayNode(TreeNode root, Class<?> clazz) throws Exception

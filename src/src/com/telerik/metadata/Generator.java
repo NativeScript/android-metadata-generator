@@ -11,7 +11,6 @@ public class Generator {
 	 */
 	public static void main(String[] args) throws Exception
 	{
-		String dirName = "../jars";
 		String outName = "bin";
 		String[] params = null;
 		
