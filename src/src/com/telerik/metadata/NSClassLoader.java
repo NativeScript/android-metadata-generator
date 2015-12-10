@@ -43,8 +43,8 @@ public class NSClassLoader extends URLClassLoader
 		for(int i = 0; i < paths.length; i++) {
 			File dir = new File(paths[i]);
 			this.processFile(dir);
-			this.populateClassNames();
 		}
+		this.populateClassNames();
 	}
 
 	private void populateClassNames()
