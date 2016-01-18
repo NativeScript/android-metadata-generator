@@ -1,7 +1,10 @@
 package com.telerik.metadata;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
+
+import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.Type;
 
 public class TreeNode
 {
@@ -10,7 +13,7 @@ public class TreeNode
 		public MethodInfo(Method m)
 		{
 			this.name = m.getName();
-			this.sig = m.toGenericString();
+			this.sig = m.getSignature();
 			this.isResolved = false;
 			signature = new ArrayList<TreeNode>();
 		}
@@ -78,15 +81,64 @@ public class TreeNode
 	public static final TreeNode DOUBLE = getPrimitive("D", (byte) 6);
 	public static final TreeNode BOOLEAN = getPrimitive("Z", (byte) 7);
 	public static final TreeNode CHAR = getPrimitive("C", (byte) 8);
-
-	public static TreeNode getPrimitive(Class<?> clazz) throws Exception
+	
+	public static TreeNode getPrimitive(Type type) throws Exception
 	{
-		if (!clazz.isPrimitive())
+		if (!ClassUtil.isPrimitive(type))
+		{
+			throw new Exception("type must be primitive");
+		}
+
+		if (type.equals(Type.BYTE))
+		{
+			return TreeNode.BYTE;
+		}
+		else if (type.equals(Type.SHORT))
+		{
+			return TreeNode.SHORT;
+		}
+		else if (type.equals(Type.INT))
+		{
+			return TreeNode.INTEGER;
+		}
+		else if (type.equals(Type.LONG))
+		{
+			return TreeNode.LONG;
+		}
+		else if (type.equals(Type.FLOAT))
+		{
+			return TreeNode.FLOAT;
+		}
+		else if (type.equals(Type.DOUBLE))
+		{
+			return TreeNode.DOUBLE;
+		}
+		else if (type.equals(Type.BOOLEAN))
+		{
+			return TreeNode.BOOLEAN;
+		}
+		else if (type.equals(Type.CHAR))
+		{
+			return TreeNode.CHAR;
+		}
+		else if (type.equals(Type.VOID))
+		{
+			return null;
+		}
+		else
+		{
+			throw new Exception("unknown type=" + type.toString());
+		}
+	}
+
+	public static TreeNode getPrimitive(JavaClass clazz) throws Exception
+	{
+		if (!ClassUtil.isPrimitive(clazz))
 		{
 			throw new Exception("clazz must be primitive");
 		}
 
-		String name = clazz.getSimpleName();
+		String name = clazz.getClassName();
 
 		if (name.equals("byte"))
 		{
@@ -127,6 +179,50 @@ public class TreeNode
 		else
 		{
 			throw new Exception("unknown type=" + name);
+		}
+	}
+
+	public static TreeNode getPrimitive(String name) throws IllegalArgumentException
+	{
+		if (name.equals("B"))
+		{
+			return TreeNode.BYTE;
+		}
+		else if (name.equals("S"))
+		{
+			return TreeNode.SHORT;
+		}
+		else if (name.equals("I"))
+		{
+			return TreeNode.INTEGER;
+		}
+		else if (name.equals("J"))
+		{
+			return TreeNode.LONG;
+		}
+		else if (name.equals("F"))
+		{
+			return TreeNode.FLOAT;
+		}
+		else if (name.equals("D"))
+		{
+			return TreeNode.DOUBLE;
+		}
+		else if (name.equals("Z"))
+		{
+			return TreeNode.BOOLEAN;
+		}
+		else if (name.equals("C"))
+		{
+			return TreeNode.CHAR;
+		}
+		else if (name.equals("V"))
+		{
+			return null;
+		}
+		else
+		{
+			throw new IllegalArgumentException("unknown type=" + name);
 		}
 	}
 
@@ -197,7 +293,7 @@ public class TreeNode
 		return child;
 	}
 
-	public TreeNode attachChild(Class<?> clazz) throws Exception
+	public TreeNode attachChild(JavaClass clazz) throws Exception
 	{
 		TreeNode child = getPrimitive(clazz);
 		children.add(child);

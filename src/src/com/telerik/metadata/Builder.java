@@ -1,8 +1,5 @@
 package com.telerik.metadata;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -11,6 +8,16 @@ import java.util.Map;
 
 import com.telerik.metadata.TreeNode.FieldInfo;
 import com.telerik.metadata.TreeNode.MethodInfo;
+
+import org.apache.bcel.classfile.Attribute;
+import org.apache.bcel.classfile.ConstantUtf8;
+import org.apache.bcel.classfile.InnerClass;
+import org.apache.bcel.classfile.InnerClasses;
+import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
+import org.apache.bcel.classfile.Field;
+import org.apache.bcel.generic.Type;
+
 
 public class Builder
 {
@@ -26,37 +33,40 @@ public class Builder
 
 	private static MethodNameComparator methodNameComparator = new MethodNameComparator();
 	private static HashMap<Class<?>, String> jniPrimitiveTypesMappings = new HashMap<Class<?>, String>();
-
-	public static TreeNode build(String[] dirs) throws Exception
+	
+	public static TreeNode build(String[] paths) throws Exception
 	{
 		NSClassLoader loader = NSClassLoader.getInstance();
-		loader.loadDirs(dirs);
+		loader.loadDirs(paths);
 		initialize();
-
+		
+		for (String p: paths)
+		{
+			JarFile jar = JarFile.readJar(p);
+			ClassRepo.cacheJarFile(jar);
+		}
+		
 		TreeNode root = TreeNode.getRoot();
 
-		ArrayList<ArrayList<String>> jarClassNames = NSClassLoader.getInstance()
-			.getClassNames();
-		for (ArrayList<String> classNames : jarClassNames)
+		String[] classNames = ClassRepo.getClassNames();
+		for (String className : classNames)
 		{
-			for (String className : classNames)
+			try
 			{
-				try
-				{
-					// possible exceptions here are:
-					// - NoClassDefFoundError
-					// - ClassNotFoundException
-					// both are raised due to some API level mismatch -
-					// e.g. we are processing jars with API 21 while we have in
-					// our class path API 17
-					Class<?> clazz = Class.forName(className, false, loader);
-					generate(clazz, root);
-				}
-				catch (Throwable e)
-				{
-					System.out.println("Skip " + className);
-					System.out.println("\tError: " + e.toString());
-				}
+				// possible exceptions here are:
+				// - NoClassDefFoundError
+				// - ClassNotFoundException
+				// both are raised due to some API level mismatch -
+				// e.g. we are processing jars with API 21 while we have in
+				// our class path API 17
+				//Class<?> clazz = Class.forName(className, false, loader);
+				JavaClass clazz = ClassRepo.findClass(className);
+				generate(clazz, root);
+			}
+			catch (Throwable e)
+			{
+				System.out.println("Skip " + className);
+				System.out.println("\tError: " + e.toString());
 			}
 		}
 
@@ -74,24 +84,24 @@ public class Builder
 		jniPrimitiveTypesMappings.put(boolean.class, "Z");
 		jniPrimitiveTypesMappings.put(char.class, "C");
 	}
+	
 
-	private static Boolean isClassPublic(Class<?> clazz)
+	private static Boolean isClassPublic(JavaClass clazz)
 	{
 		Boolean isPublic = true;
 
 		try
 		{
-			Class<?> currClass = clazz;
+			JavaClass currClass = clazz;
 			while (currClass != null)
 			{
-				int modifiers = currClass.getModifiers();
-				if (!Modifier.isPublic(modifiers) && !Modifier.isProtected(modifiers))
+				if (!currClass.isPublic() && !currClass.isProtected())
 				{
 					isPublic = false;
 					break;
 				}
 
-				currClass = currClass.getEnclosingClass();
+				currClass = ClassUtil.getEnclosingClass(currClass);
 			}
 		}
 		catch (NoClassDefFoundError e)
@@ -102,7 +112,7 @@ public class Builder
 		return isPublic;
 	}
 	
-	private static void generate(Class<?> clazz, TreeNode root) throws Exception
+	private static void generate(JavaClass clazz, TreeNode root) throws Exception
 	{
 		if (!isClassPublic(clazz))
 		{
@@ -113,16 +123,16 @@ public class Builder
 		setNodeMembers(clazz, node, root);
 	}
 	
-	private static void setNodeMembers(Class<?> clazz, TreeNode node, TreeNode root) throws Exception
+	private static void setNodeMembers(JavaClass clazz, TreeNode node, TreeNode root) throws Exception
 	{
 		Map<String, MethodInfo> existingMethods = new HashMap<String, MethodInfo>();
 		for (MethodInfo mi: node.instanceMethods)
 		{
-			existingMethods.put(mi.sig, mi);
+			existingMethods.put(mi.name + mi.sig, mi);
 		}
 
-		Method[] allMethods = clazz.getMethods();
-		Method[] methods = clazz.getDeclaredMethods();
+		Method[] allMethods = ClassUtil.getAllMethods(clazz);
+		Method[] methods = clazz.getMethods();
 		
 		Arrays.sort(methods, methodNameComparator);
 		
@@ -131,20 +141,18 @@ public class Builder
 			if (m.isSynthetic())
 				continue;
 			
-			int modifiers = m.getModifiers();
-			if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers))
+			if (m.isPublic() || m.isProtected())
 			{
-				boolean isStatic = Modifier.isStatic(modifiers);
+				boolean isStatic = m.isStatic();
 
 				MethodInfo mi = new MethodInfo(m);
 				int countUnique = 0;
 				for (Method m1: allMethods)
 				{
-					int m1Modifiers = m1.getModifiers();
-					boolean m1IsStatic = Modifier.isStatic(m1Modifiers);
-					if (!m1.isSynthetic() && (Modifier.isPublic(m1Modifiers) || Modifier.isProtected(m1Modifiers))
+					boolean m1IsStatic = m1.isStatic();
+					if (!m1.isSynthetic() && (m1.isPublic() || m1.isProtected())
 						&& (isStatic == m1IsStatic)
-						&& (m1.getName().equals(mi.name) && (m1.getParameterTypes().length == m.getParameterTypes().length)))
+						&& (m1.getName().equals(mi.name) && (m1.getArgumentTypes().length == m.getArgumentTypes().length)))
 					{
 						if (++countUnique > 1)
 							break;
@@ -152,19 +160,19 @@ public class Builder
 				}
 				mi.isResolved = countUnique == 1;
 
-				Class<?>[] params = m.getParameterTypes();
+				Type[] params = m.getArgumentTypes();
 				mi.signature = getMethodSignature(root, m.getReturnType(), params);
 
 				if (mi.signature != null)
 				{
 					if (isStatic)
 					{
-						mi.declaringType = getOrCreateNode(root, m.getDeclaringClass());
+						mi.declaringType = getOrCreateNode(root, clazz);
 						node.staticMethods.add(mi);
 					}
 					else
 					{
-						String sig = m.toGenericString();
+						String sig = m.getName() + m.getSignature();
 						if (existingMethods.containsKey(sig))
 						{
 							continue;
@@ -174,27 +182,23 @@ public class Builder
 				}
 			}
 		}
-
 		
-		Field[] fields = clazz.getDeclaredFields();
-
+		Field[] fields = clazz.getFields();
 		for (Field f : fields)
 		{
-			int modifiers = f.getModifiers();
-			if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers))
+			if (f.isPublic() || f.isProtected())
 			{
-				boolean isStatic = Modifier.isStatic(modifiers);
-				boolean isFinal = Modifier.isFinal(modifiers);
-				
 				FieldInfo fi = new FieldInfo(f.getName());
 
-				Class<?> type = f.getType();
-				fi.valueType = getOrCreateNode(root, type);
-				fi.isFinalType = isFinal;
+				Type t = f.getType();
+				boolean isPrimitive = ClassUtil.isPrimitive(t);
+				
+				fi.valueType = isPrimitive ? TreeNode.getPrimitive(t) : getOrCreateNode(root, t);
+				fi.isFinalType = f.isFinal();
 
-				if (isStatic)
+				if (f.isStatic())
 				{
-					fi.declaringType = getOrCreateNode(root, f.getDeclaringClass());
+					fi.declaringType = getOrCreateNode(root, clazz);
 					node.staticFields.add(fi);
 				}
 				else
@@ -204,25 +208,64 @@ public class Builder
 			}
 		}
 	}
-
-	private static TreeNode getOrCreateNode(TreeNode root, Class<?> clazz) throws Exception
+	
+	private static TreeNode getOrCreateNode(TreeNode root, Type type) throws Exception
 	{
-		if (clazz.isPrimitive())
+		TreeNode node;
+		
+		String typeName = type.getSignature();
+
+		if (typeName.startsWith("["))
+		{
+			node = createArrayNode(root, typeName);
+		} else {
+			String name = ClassUtil.getCanonicalName(type.getSignature());
+			JavaClass clazz = ClassRepo.findClass(name);
+			node = getOrCreateNode(root, clazz);
+		}
+		
+		return node;
+	}
+	
+	private static TreeNode getOrCreateNode(TreeNode root, JavaClass clazz) throws Exception
+	{
+		if (ClassUtil.isPrimitive(clazz))
 		{
 			return TreeNode.getPrimitive(clazz);
 		}
 
-		if (clazz.isArray())
+		if (ClassUtil.isArray(clazz))
 		{
-			return createArrayNode(root, clazz);
+			throw new UnsupportedOperationException("unexpected class=" + clazz.getClassName());
 		}
 
 		TreeNode node = root;
-		String name = clazz.getSimpleName();
+		String name = ClassUtil.getSimpleName(clazz);
 
-		String[] packages = clazz.getPackage()
-			.getName()
-			.split("\\.");
+		if (clazz.getClassName().contains("$")) {
+			boolean found = false;
+			for (Attribute a : clazz.getAttributes()) {
+	            if (a instanceof InnerClasses) {
+	            	InnerClass[] i = ((InnerClasses) a).getInnerClasses();
+	            	for (InnerClass ic: i) {
+	            		
+	            		ConstantUtf8 cname = (ConstantUtf8) clazz.getConstantPool().getConstant(ic.getInnerNameIndex());
+                        String innerClassname = cname.getBytes();
+                        
+                        if (name.equals(innerClassname)) {
+                        	int flags = ic.getInnerAccessFlags();
+                        	clazz.setAccessFlags(flags);
+                        	found = true;
+                        	break;
+                        }
+	            	}
+	            }
+	            if (found)
+	            	break;
+            }
+		}
+
+		String[] packages = clazz.getPackageName().split("\\.");
 
 		for (String p : packages)
 		{
@@ -235,17 +278,16 @@ public class Builder
 			node = child;
 		}
 
-		Class<?> outer = clazz.getEnclosingClass();
-		ArrayList<Class<?>> outerClasses = new ArrayList<Class<?>>();
+		JavaClass outer = ClassUtil.getEnclosingClass(clazz);
+		ArrayList<JavaClass> outerClasses = new ArrayList<JavaClass>();
 		while (outer != null)
 		{
-			int outerModifiers = outer.getModifiers();
-			if (!Modifier.isPublic(outerModifiers))
+			if (!outer.isPublic())
 			{
 				return null;
 			}
 			outerClasses.add(outer);
-			outer = outer.getEnclosingClass();
+			outer = ClassUtil.getEnclosingClass(outer);
 		}
 
 		if (outerClasses.size() > 0)
@@ -253,14 +295,13 @@ public class Builder
 			for (int i = outerClasses.size() - 1; i >= 0; i--)
 			{
 				outer = outerClasses.get(i);
-				String outerClassname = outer.getSimpleName();
+				String outerClassname = ClassUtil.getSimpleName(outer);
 				TreeNode child = node.getChild(outerClassname);
 				if (child == null)
 				{
 					child = node.createChild(outerClassname);
 					child.nodeType = outer.isInterface() ? TreeNode.Interface : TreeNode.Class;
-					int outerModifilers = outer.getModifiers();
-					if (Modifier.isStatic(outerModifilers))
+					if (outer.isStatic())
 					{
 						child.nodeType |= TreeNode.Static;
 					}
@@ -273,7 +314,7 @@ public class Builder
 		if (child == null)
 		{
 			child = node.createChild(name);
-			if (clazz.isPrimitive())
+			if (ClassUtil.isPrimitive(clazz))
 			{
 				TreeNode tmp = TreeNode.getPrimitive(clazz);
 				child.nodeType = tmp.nodeType;
@@ -281,8 +322,7 @@ public class Builder
 			else
 			{
 				child.nodeType = clazz.isInterface() ? TreeNode.Interface : TreeNode.Class;
-				int classModifilers = clazz.getModifiers();
-				if (Modifier.isStatic(classModifilers))
+				if (clazz.isStatic())
 				{
 					child.nodeType |= TreeNode.Static;
 				}
@@ -291,9 +331,9 @@ public class Builder
 		node = child;
 		if (node.baseClassNode == null)
 		{
-			Class<?> baseClass = clazz.isInterface()
-								? Object.class
-								: clazz.getSuperclass();
+			JavaClass baseClass = clazz.isInterface()
+								? ClassUtil.getClassByName("java.lang.Object")
+								: ClassUtil.getSuperclass(clazz);
 			if (baseClass != null)
 			{
 				node.baseClassNode = getOrCreateNode(root, baseClass);
@@ -304,21 +344,21 @@ public class Builder
 		return node;
 	}
 	
-	private static void copyBasePublicApi(Class<?> baseClass, TreeNode node, TreeNode root) throws Exception 
+	private static void copyBasePublicApi(JavaClass baseClass, TreeNode node, TreeNode root) throws Exception 
 	{
-		while ((baseClass != null) && !Modifier.isPublic(baseClass.getModifiers()))
+		while ((baseClass != null) && !baseClass.isPublic())
 		{
 			setNodeMembers(baseClass, node, root);
-			baseClass = baseClass.getSuperclass();
+			baseClass = ClassUtil.getSuperclass(baseClass);
 		}
 	}
 
-	private static TreeNode createArrayNode(TreeNode root, Class<?> clazz) throws Exception
+	private static TreeNode createArrayNode(TreeNode root, String className) throws Exception
 	{
 		TreeNode currentNode = root;
-		Class<?> currentClass = clazz;
+		String currentClassname = className;
 
-		while (currentClass.isArray())
+		while (ClassUtil.isArray(currentClassname))
 		{
 			TreeNode child = currentNode.getChild("[");
 			if (child == null)
@@ -327,52 +367,54 @@ public class Builder
 				child.nodeType = TreeNode.Array;
 				child.offsetValue = 1;
 			}
-			currentClass = currentClass.getComponentType();
+			currentClassname = currentClassname.substring(1);
 			currentNode = child;
 		}
 
-		String name = currentClass.getCanonicalName();
+		String name = ClassUtil.getCanonicalName(currentClassname);
 		TreeNode child = currentNode.getChild(name);
 
 		if (child == null)
 		{
 			child = currentNode.createChild(name);
-			if (currentClass.isPrimitive())
+			if (ClassUtil.isPrimitive(name))
 			{
-				TreeNode tmp = TreeNode.getPrimitive(currentClass);
-				child.nodeType = tmp.nodeType;
+				TreeNode node = TreeNode.getPrimitive(name);
+				child.nodeType = node.nodeType;
+				child.arrayElement = node;
 			}
 			else
 			{
-				child.nodeType = currentClass.isInterface() ? TreeNode.Interface : TreeNode.Class;
-				int classModifilers = currentClass.getModifiers();
-				if (Modifier.isStatic(classModifilers))
+				JavaClass clazz = ClassRepo.findClass(name);
+				child.nodeType = clazz.isInterface() ? TreeNode.Interface : TreeNode.Class;
+				if (clazz.isStatic())
 				{
 					child.nodeType |= TreeNode.Static;
 				}
+				child.arrayElement = getOrCreateNode(root, clazz);
 			}
-			child.arrayElement = getOrCreateNode(root, currentClass);
 		}
 
 		return child;
 	}
 
-	private static ArrayList<TreeNode> getMethodSignature(TreeNode root, Class<?> retType, Class<?>[] params) throws Exception
+	private static ArrayList<TreeNode> getMethodSignature(TreeNode root, Type retType, Type[] params) throws Exception
 	{
 		ArrayList<TreeNode> sig = new ArrayList<TreeNode>();
-		boolean isVoid = retType.getName()
-			.equals("void");
+		boolean isVoid = retType.equals(Type.VOID);
 
 		TreeNode node = null;
 		if (!isVoid)
 		{
-			node = getOrCreateNode(root, retType);
+			boolean isPrimitive = ClassUtil.isPrimitive(retType);
+			node = isPrimitive ? TreeNode.getPrimitive(retType) : getOrCreateNode(root, retType);
 		}
 		sig.add(node);
 
-		for (Class<?> param : params)
+		for (Type param : params)
 		{
-			node = getOrCreateNode(root, param);
+			boolean isPrimitive = ClassUtil.isPrimitive(param);
+			node = isPrimitive ? TreeNode.getPrimitive(param) : getOrCreateNode(root, param);
 			if (node == null)
 			{
 				return null;
