@@ -6,12 +6,9 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 
-public class TreeNode
-{
-	public static class MethodInfo
-	{
-		public MethodInfo(Method m)
-		{
+public class TreeNode {
+	public static class MethodInfo {
+		public MethodInfo(Method m) {
 			this.name = m.getName();
 			this.sig = m.getSignature();
 			this.isResolved = false;
@@ -25,8 +22,7 @@ public class TreeNode
 		public boolean isResolved;
 	}
 
-	public static TreeNode getRoot()
-	{
+	public static TreeNode getRoot() {
 		TreeNode root = new TreeNode();
 		root.setName("");
 		root.children.add(BYTE);
@@ -41,10 +37,8 @@ public class TreeNode
 		return root;
 	}
 
-	public static class FieldInfo
-	{
-		public FieldInfo(String name)
-		{
+	public static class FieldInfo {
+		public FieldInfo(String name) {
 			this.name = name;
 		}
 
@@ -63,8 +57,7 @@ public class TreeNode
 
 	public static final byte Final = 1;
 
-	public TreeNode()
-	{
+	public TreeNode() {
 		children = new ArrayList<TreeNode>();
 
 		instanceMethods = new ArrayList<TreeNode.MethodInfo>();
@@ -81,153 +74,91 @@ public class TreeNode
 	public static final TreeNode DOUBLE = getPrimitive("D", (byte) 6);
 	public static final TreeNode BOOLEAN = getPrimitive("Z", (byte) 7);
 	public static final TreeNode CHAR = getPrimitive("C", (byte) 8);
-	
-	public static TreeNode getPrimitive(Type type) throws Exception
-	{
-		if (!ClassUtil.isPrimitive(type))
-		{
+
+	public static TreeNode getPrimitive(Type type) throws Exception {
+		if (!ClassUtil.isPrimitive(type)) {
 			throw new Exception("type must be primitive");
 		}
 
-		if (type.equals(Type.BYTE))
-		{
+		if (type.equals(Type.BYTE)) {
 			return TreeNode.BYTE;
-		}
-		else if (type.equals(Type.SHORT))
-		{
+		} else if (type.equals(Type.SHORT)) {
 			return TreeNode.SHORT;
-		}
-		else if (type.equals(Type.INT))
-		{
+		} else if (type.equals(Type.INT)) {
 			return TreeNode.INTEGER;
-		}
-		else if (type.equals(Type.LONG))
-		{
+		} else if (type.equals(Type.LONG)) {
 			return TreeNode.LONG;
-		}
-		else if (type.equals(Type.FLOAT))
-		{
+		} else if (type.equals(Type.FLOAT)) {
 			return TreeNode.FLOAT;
-		}
-		else if (type.equals(Type.DOUBLE))
-		{
+		} else if (type.equals(Type.DOUBLE)) {
 			return TreeNode.DOUBLE;
-		}
-		else if (type.equals(Type.BOOLEAN))
-		{
+		} else if (type.equals(Type.BOOLEAN)) {
 			return TreeNode.BOOLEAN;
-		}
-		else if (type.equals(Type.CHAR))
-		{
+		} else if (type.equals(Type.CHAR)) {
 			return TreeNode.CHAR;
-		}
-		else if (type.equals(Type.VOID))
-		{
+		} else if (type.equals(Type.VOID)) {
 			return null;
-		}
-		else
-		{
+		} else {
 			throw new Exception("unknown type=" + type.toString());
 		}
 	}
 
-	public static TreeNode getPrimitive(JavaClass clazz) throws Exception
-	{
-		if (!ClassUtil.isPrimitive(clazz))
-		{
+	public static TreeNode getPrimitive(JavaClass clazz) throws Exception {
+		if (!ClassUtil.isPrimitive(clazz)) {
 			throw new Exception("clazz must be primitive");
 		}
 
 		String name = clazz.getClassName();
 
-		if (name.equals("byte"))
-		{
+		if (name.equals("byte")) {
 			return TreeNode.BYTE;
-		}
-		else if (name.equals("short"))
-		{
+		} else if (name.equals("short")) {
 			return TreeNode.SHORT;
-		}
-		else if (name.equals("int"))
-		{
+		} else if (name.equals("int")) {
 			return TreeNode.INTEGER;
-		}
-		else if (name.equals("long"))
-		{
+		} else if (name.equals("long")) {
 			return TreeNode.LONG;
-		}
-		else if (name.equals("float"))
-		{
+		} else if (name.equals("float")) {
 			return TreeNode.FLOAT;
-		}
-		else if (name.equals("double"))
-		{
+		} else if (name.equals("double")) {
 			return TreeNode.DOUBLE;
-		}
-		else if (name.equals("boolean"))
-		{
+		} else if (name.equals("boolean")) {
 			return TreeNode.BOOLEAN;
-		}
-		else if (name.equals("char"))
-		{
+		} else if (name.equals("char")) {
 			return TreeNode.CHAR;
-		}
-		else if (name.equals("void"))
-		{
+		} else if (name.equals("void")) {
 			return null;
-		}
-		else
-		{
+		} else {
 			throw new Exception("unknown type=" + name);
 		}
 	}
 
-	public static TreeNode getPrimitive(String name) throws IllegalArgumentException
-	{
-		if (name.equals("B"))
-		{
+	public static TreeNode getPrimitive(String name)
+			throws IllegalArgumentException {
+		if (name.equals("B")) {
 			return TreeNode.BYTE;
-		}
-		else if (name.equals("S"))
-		{
+		} else if (name.equals("S")) {
 			return TreeNode.SHORT;
-		}
-		else if (name.equals("I"))
-		{
+		} else if (name.equals("I")) {
 			return TreeNode.INTEGER;
-		}
-		else if (name.equals("J"))
-		{
+		} else if (name.equals("J")) {
 			return TreeNode.LONG;
-		}
-		else if (name.equals("F"))
-		{
+		} else if (name.equals("F")) {
 			return TreeNode.FLOAT;
-		}
-		else if (name.equals("D"))
-		{
+		} else if (name.equals("D")) {
 			return TreeNode.DOUBLE;
-		}
-		else if (name.equals("Z"))
-		{
+		} else if (name.equals("Z")) {
 			return TreeNode.BOOLEAN;
-		}
-		else if (name.equals("C"))
-		{
+		} else if (name.equals("C")) {
 			return TreeNode.CHAR;
-		}
-		else if (name.equals("V"))
-		{
+		} else if (name.equals("V")) {
 			return null;
-		}
-		else
-		{
+		} else {
 			throw new IllegalArgumentException("unknown type=" + name);
 		}
 	}
 
-	private static TreeNode getPrimitive(String name, byte id)
-	{
+	private static TreeNode getPrimitive(String name, byte id) {
 		TreeNode node = new TreeNode();
 		node.setName(name);
 		node.nodeType = (byte) (Primitive + id);
@@ -235,13 +166,11 @@ public class TreeNode
 		return node;
 	}
 
-	public String getName()
-	{
+	public String getName() {
 		return _name;
 	}
 
-	public void setName(String value)
-	{
+	public void setName(String value) {
 		_name = value;
 	}
 
@@ -266,17 +195,13 @@ public class TreeNode
 
 	public ArrayList<TreeNode> children;
 
-	public TreeNode getChild(String childName)
-	{
+	public TreeNode getChild(String childName) {
 		TreeNode child = null;
 
-		for (TreeNode c : children)
-		{
-			boolean found = c.getName()
-				.equals(childName);
+		for (TreeNode c : children) {
+			boolean found = c.getName().equals(childName);
 
-			if (found)
-			{
+			if (found) {
 				child = c;
 				break;
 			}
@@ -285,16 +210,14 @@ public class TreeNode
 		return child;
 	}
 
-	public TreeNode createChild(String childName)
-	{
+	public TreeNode createChild(String childName) {
 		TreeNode child = new TreeNode();
 		child.setName(childName);
 		children.add(child);
 		return child;
 	}
 
-	public TreeNode attachChild(JavaClass clazz) throws Exception
-	{
+	public TreeNode attachChild(JavaClass clazz) throws Exception {
 		TreeNode child = getPrimitive(clazz);
 		children.add(child);
 		return child;
