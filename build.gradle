@@ -18,6 +18,10 @@ sourceSets {
 	main.output.classesDir = "$rootDir/dist/classes"
 }
 
+dependencies {
+   compile files("./src/libs/bcel-5.2.jar")
+}
+
 task makeDistDir {
 	def distDir = new File("$rootDir/dist")
 	distDir.mkdirs()
