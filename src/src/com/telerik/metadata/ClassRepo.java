@@ -43,11 +43,7 @@ public class ClassRepo {
 				names.add(className);
 			}
 		}
-		names.sort(new Comparator<String>() {
-			public int compare(String arg0, String arg1) {
-				return arg0.compareTo(arg1);
-			}
-		});
-		return names.toArray(new String[names.size()]);
+		String[] arrClassNames = names.toArray(new String[names.size()]);
+		return arrClassNames;
 	}
 }
