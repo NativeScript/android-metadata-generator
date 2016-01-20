@@ -1,6 +1,7 @@
 package com.telerik.metadata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 
 import org.apache.bcel.classfile.JavaClass;
@@ -44,6 +45,7 @@ public class ClassRepo {
 			}
 		}
 		String[] arrClassNames = names.toArray(new String[names.size()]);
+		Arrays.sort(arrClassNames);
 		return arrClassNames;
 	}
 }
