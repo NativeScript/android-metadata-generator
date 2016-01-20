@@ -77,6 +77,17 @@ jar {
         attributes("Manifest-Version": "1.0",
                    "Main-Class": "com.telerik.metadata.Generator")
     }
+	
+    from {
+
+        configurations.runtime.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
 }
 
 task copyJarToDist (type: Copy) {
