@@ -27,16 +27,13 @@ public class Builder {
 	}
 
 	private static MethodNameComparator methodNameComparator = new MethodNameComparator();
-	private static HashMap<Class<?>, String> jniPrimitiveTypesMappings = new HashMap<Class<?>, String>();
 
 	public static TreeNode build(String[] paths) throws Exception {
-		NSClassLoader loader = NSClassLoader.getInstance();
-		loader.loadDirs(paths);
-		initialize();
-
-		for (String p : paths) {
-			JarFile jar = JarFile.readJar(p);
-			ClassRepo.cacheJarFile(jar);
+		for (String path : paths) {
+			if (path.endsWith(".jar")) {
+				JarFile jar = JarFile.readJar(path);
+				ClassRepo.cacheJarFile(jar);
+			}
 		}
 
 		TreeNode root = TreeNode.getRoot();
@@ -60,17 +57,6 @@ public class Builder {
 		}
 
 		return root;
-	}
-
-	private static void initialize() {
-		jniPrimitiveTypesMappings.put(byte.class, "B");
-		jniPrimitiveTypesMappings.put(short.class, "S");
-		jniPrimitiveTypesMappings.put(int.class, "I");
-		jniPrimitiveTypesMappings.put(long.class, "J");
-		jniPrimitiveTypesMappings.put(float.class, "F");
-		jniPrimitiveTypesMappings.put(double.class, "D");
-		jniPrimitiveTypesMappings.put(boolean.class, "Z");
-		jniPrimitiveTypesMappings.put(char.class, "C");
 	}
 
 	private static Boolean isClassPublic(JavaClass clazz) {

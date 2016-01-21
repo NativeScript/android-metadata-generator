@@ -2,7 +2,6 @@ package com.telerik.metadata;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 
 import org.apache.bcel.classfile.JavaClass;
 
