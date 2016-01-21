@@ -1,5 +1,6 @@
 package com.telerik.metadata;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -30,7 +31,8 @@ public class Builder {
 
 	public static TreeNode build(String[] paths) throws Exception {
 		for (String path : paths) {
-			if (path.endsWith(".jar")) {
+			File file = new File(path);
+			if (file.exists() && file.isFile() && path.endsWith(".jar")) {
 				JarFile jar = JarFile.readJar(path);
 				ClassRepo.cacheJarFile(jar);
 			}
