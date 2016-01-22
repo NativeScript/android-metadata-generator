@@ -11,20 +11,23 @@ import org.apache.bcel.classfile.ClassFormatException;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 
-public class JarFile {
+public class JarFile implements ClassMapProvider {
 	private final String path;
+	private final Map<String, JavaClass> classMap;
+	private static final String CLASS_EXT = ".class";
 
 	private JarFile(String path) {
 		this.path = path;
+		this.classMap = new HashMap<String, JavaClass>();
 	}
 
 	public String getPath() {
 		return path;
 	}
 
-	public final Map<String, JavaClass> classes = new HashMap<String, JavaClass>();
-
-	private static final String CLASS_EXT = ".class";
+	public Map<String, JavaClass> getClassMap() {
+		return classMap;
+	}
 
 	public static JarFile readJar(String path) throws ClassFormatException,
 			IOException {
@@ -44,7 +47,7 @@ public class JarFile {
 							.replace('/', '.');
 					ClassParser cp = new ClassParser(jis, name);
 					JavaClass clazz = cp.parse();
-					jar.classes.put(name, clazz);
+					jar.classMap.put(name, clazz);
 				}
 			}
 		} finally {
@@ -54,5 +57,4 @@ public class JarFile {
 		}
 		return jar;
 	}
-
 }

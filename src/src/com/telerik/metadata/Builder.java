@@ -32,9 +32,14 @@ public class Builder {
 	public static TreeNode build(String[] paths) throws Exception {
 		for (String path : paths) {
 			File file = new File(path);
-			if (file.exists() && file.isFile() && path.endsWith(".jar")) {
-				JarFile jar = JarFile.readJar(path);
-				ClassRepo.cacheJarFile(jar);
+			if (file.exists()) {
+				if (file.isFile() && path.endsWith(".jar")) {
+					JarFile jar = JarFile.readJar(path);
+					ClassRepo.cacheJarFile(jar);
+				} else if (file.isDirectory()) {
+					ClassDirectrory dir = ClassDirectrory.readDirectory(path);
+					ClassRepo.cacheJarFile(dir);
+				}
 			}
 		}
 

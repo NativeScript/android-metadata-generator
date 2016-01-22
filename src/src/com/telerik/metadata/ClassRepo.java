@@ -9,26 +9,26 @@ public class ClassRepo {
 	private ClassRepo() {
 	}
 
-	private static ArrayList<JarFile> jars = new ArrayList<JarFile>();
+	private static ArrayList<ClassMapProvider> cachedProviders = new ArrayList<ClassMapProvider>();
 
-	public static void cacheJarFile(JarFile jar) {
-		for (String className : jar.classes.keySet()) {
-			for (JarFile cachedJar : jars) {
-				JavaClass clazz = cachedJar.classes.get(className);
+	public static void cacheJarFile(ClassMapProvider classMapProvider) {
+		for (String className : classMapProvider.getClassMap().keySet()) {
+			for (ClassMapProvider cachedProvider : cachedProviders) {
+				JavaClass clazz = cachedProvider.getClassMap().get(className);
 				if (clazz != null) {
 					String errMsg = "Class " + className + " conflict: "
-							+ jar.getPath() + " and " + cachedJar.getPath();
+							+ classMapProvider.getPath() + " and " + cachedProvider.getPath();
 					throw new IllegalArgumentException(errMsg);
 				}
 			}
 		}
-		jars.add(jar);
+		cachedProviders.add(classMapProvider);
 	}
 
 	public static JavaClass findClass(String className) {
 		JavaClass clazz = null;
-		for (JarFile jar : jars) {
-			clazz = jar.classes.get(className);
+		for (ClassMapProvider classMapProvider : cachedProviders) {
+			clazz = classMapProvider.getClassMap().get(className);
 			if (clazz != null) {
 				break;
 			}
@@ -38,8 +38,8 @@ public class ClassRepo {
 
 	public static String[] getClassNames() {
 		ArrayList<String> names = new ArrayList<String>();
-		for (JarFile jar : jars) {
-			for (String className : jar.classes.keySet()) {
+		for (ClassMapProvider classMapProvider : cachedProviders) {
+			for (String className : classMapProvider.getClassMap().keySet()) {
 				names.add(className);
 			}
 		}
