@@ -1,13 +1,23 @@
 /* 
 *	Packs metadata generator in a .tgz file in ~/dist folder
 *	To build .tgz
-*			gradle packmg
+*			gradlew packmg
 *	To build jar
-*			gradle jarmg
+*			gradlew jarmg
 */
 apply plugin: "java"
 
 def isWinOs = System.properties['os.name'].toLowerCase().contains('windows')
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.5.0'
+    }
+}
 
 sourceSets {
     main {
