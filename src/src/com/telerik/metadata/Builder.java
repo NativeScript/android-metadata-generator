@@ -149,11 +149,11 @@ public class Builder {
 		}
 
 		Field[] fields = clazz.getFields();
-		
-		// adds static fields from interface to implementing class because java can call them from implementing class... no problem.
-		getFieldsFromImplementedInterfaces(clazz, node, root);
 
 		setFieldInfo(clazz, node, root, fields, null);
+
+		// adds static fields from interface to implementing class because java can call them from implementing class... no problem.
+		getFieldsFromImplementedInterfaces(clazz, node, root, fields);
 	}
 
 	private static void setFieldInfo(JavaClass clazz, TreeNode node, TreeNode root, Field[] fields, JavaClass interfaceClass) throws Exception {
@@ -183,15 +183,25 @@ public class Builder {
 		}
 	}
 
-	private static void getFieldsFromImplementedInterfaces(JavaClass clazz, TreeNode node, TreeNode root) throws Exception {
+	private static void getFieldsFromImplementedInterfaces(JavaClass clazz, TreeNode node, TreeNode root, Field[] classFields) throws Exception {
 		Field[] fields = null;
-
+		ArrayList<Field> originalClassFields = (ArrayList<Field>) Arrays.asList(classFields);
+		
 		JavaClass interfaceClass = null;
 		String[] implementedInterfacesNames = clazz.getInterfaceNames();
 		if(implementedInterfacesNames.length > 0) {
 			for(String currInterface : implementedInterfacesNames) {
 				interfaceClass = ClassRepo.findClass(currInterface);
 				fields = interfaceClass.getFields();
+				
+				//if interface and implementing class declare the same static field name the class take precedence
+				if(originalClassFields.size() > 0) {
+					for(Field f : fields) {
+						if(originalClassFields.contains(f)) {
+							return;
+						}
+					}
+				}
 				setFieldInfo(clazz, node, root, fields, interfaceClass);
 			}
 		}
