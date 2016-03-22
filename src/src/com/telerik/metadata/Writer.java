@@ -157,7 +157,7 @@ public class Writer {
 		commonInterfacePrefixPosition = writeUniqueName("com/tns/gen/",
 				uniqueStrings, outStringsStream);
 
-		// this while loop fils the treeStringsStream.dat file with a sequence
+		// this while loop fills the treeStringsStream.dat file with a sequence
 		// of the
 		// length and name of all the nodes in the built tree + the primitive
 		// types used by method signatures
