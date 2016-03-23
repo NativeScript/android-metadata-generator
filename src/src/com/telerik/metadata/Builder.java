@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.telerik.metadata.TreeNode.FieldInfo;
@@ -86,8 +87,7 @@ public class Builder {
 		return isPublic;
 	}
 
-	private static void generate(JavaClass clazz, TreeNode root)
-			throws Exception {
+	private static void generate(JavaClass clazz, TreeNode root) throws Exception {
 		if (!isClassPublic(clazz)) {
 			return;
 		}
@@ -96,8 +96,7 @@ public class Builder {
 		setNodeMembers(clazz, node, root);
 	}
 
-	private static void setNodeMembers(JavaClass clazz, TreeNode node,
-			TreeNode root) throws Exception {
+	private static void setNodeMembers(JavaClass clazz, TreeNode node, TreeNode root) throws Exception {
 		Map<String, MethodInfo> existingMethods = new HashMap<String, MethodInfo>();
 		for (MethodInfo mi : node.instanceMethods) {
 			existingMethods.put(mi.name + mi.sig, mi);
@@ -151,6 +150,14 @@ public class Builder {
 		}
 
 		Field[] fields = clazz.getFields();
+
+		setFieldInfo(clazz, node, root, fields, null);
+
+		// adds static fields from interface to implementing class because java can call them from implementing class... no problem.
+		getFieldsFromImplementedInterfaces(clazz, node, root, fields);
+	}
+
+	private static void setFieldInfo(JavaClass clazz, TreeNode node, TreeNode root, Field[] fields, JavaClass interfaceClass) throws Exception {
 		for (Field f : fields) {
 			if (f.isPublic() || f.isProtected()) {
 				FieldInfo fi = new FieldInfo(f.getName());
@@ -158,15 +165,46 @@ public class Builder {
 				Type t = f.getType();
 				boolean isPrimitive = ClassUtil.isPrimitive(t);
 
-				fi.valueType = isPrimitive ? TreeNode.getPrimitive(t)
-						: getOrCreateNode(root, t);
+				fi.valueType = isPrimitive ? TreeNode.getPrimitive(t): getOrCreateNode(root, t);
 				fi.isFinalType = f.isFinal();
 
 				if (f.isStatic()) {
-					fi.declaringType = getOrCreateNode(root, clazz);
+					if(interfaceClass != null) {
+						// changes declaring type of static fields from implementing class to interface
+						fi.declaringType = getOrCreateNode(root, interfaceClass);	
+					}
+					else {
+						fi.declaringType = getOrCreateNode(root, clazz);
+					}
 					node.staticFields.add(fi);
 				} else {
 					node.instanceFields.add(fi);
+				}
+			}
+		}
+	}
+
+	private static void getFieldsFromImplementedInterfaces(JavaClass clazz, TreeNode node, TreeNode root, Field[] classFields) throws Exception {
+		Field[] fields = null;
+		List<Field> originalClassFields = Arrays.asList(classFields);
+		
+		JavaClass interfaceClass = null;
+		String[] implementedInterfacesNames = clazz.getInterfaceNames();
+		if(implementedInterfacesNames.length > 0) {
+			for(String currInterface : implementedInterfacesNames) {
+				interfaceClass = ClassRepo.findClass(currInterface);
+				if(interfaceClass != null) {
+					fields = interfaceClass.getFields();
+					
+					//if interface and implementing class declare the same static field name the class take precedence
+					if(originalClassFields.size() > 0) {
+						for(Field f : fields) {
+							if(originalClassFields.contains(f)) {
+								return;
+							}
+						}
+					}
+					setFieldInfo(clazz, node, root, fields, interfaceClass);
 				}
 			}
 		}
@@ -189,8 +227,7 @@ public class Builder {
 		return node;
 	}
 
-	private static TreeNode getOrCreateNode(TreeNode root, JavaClass clazz)
-			throws Exception {
+	private static TreeNode getOrCreateNode(TreeNode root, JavaClass clazz) throws Exception {
 		if (ClassUtil.isPrimitive(clazz)) {
 			return TreeNode.getPrimitive(clazz);
 		}
@@ -211,8 +248,7 @@ public class Builder {
 					for (InnerClass ic : i) {
 
 						ConstantUtf8 cname = (ConstantUtf8) clazz
-								.getConstantPool().getConstant(
-										ic.getInnerNameIndex());
+								.getConstantPool().getConstant(ic.getInnerNameIndex());
 						String innerClassname = cname.getBytes();
 
 						if (name.equals(innerClassname)) {
@@ -276,7 +312,7 @@ public class Builder {
 				child.nodeType = clazz.isInterface() ? TreeNode.Interface
 						: TreeNode.Class;
 				if (clazz.isStatic()) {
-					child.nodeType |= TreeNode.Static;
+					child.nodeType |= TreeNode.Static; 
 				}
 			}
 		}
