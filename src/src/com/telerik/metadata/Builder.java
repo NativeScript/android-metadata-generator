@@ -193,17 +193,19 @@ public class Builder {
 		if(implementedInterfacesNames.length > 0) {
 			for(String currInterface : implementedInterfacesNames) {
 				interfaceClass = ClassRepo.findClass(currInterface);
-				fields = interfaceClass.getFields();
-				
-				//if interface and implementing class declare the same static field name the class take precedence
-				if(originalClassFields.size() > 0) {
-					for(Field f : fields) {
-						if(originalClassFields.contains(f)) {
-							return;
+				if(interfaceClass != null) {
+					fields = interfaceClass.getFields();
+					
+					//if interface and implementing class declare the same static field name the class take precedence
+					if(originalClassFields.size() > 0) {
+						for(Field f : fields) {
+							if(originalClassFields.contains(f)) {
+								return;
+							}
 						}
 					}
+					setFieldInfo(clazz, node, root, fields, interfaceClass);
 				}
-				setFieldInfo(clazz, node, root, fields, interfaceClass);
 			}
 		}
 	}
