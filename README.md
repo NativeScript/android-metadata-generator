@@ -1,2 +1,2 @@
 # android-metadata-generator
-Contains the source for metadata generation in android runtime
+Moved to [android-runtime/android-metadata-generator](https://github.com/NativeScript/android-runtime/tree/master/android-metadata-generator)
